@@ -88,7 +88,13 @@ export const EntriesPage: React.FC = () => {
       url,
     });
     if (result) {
-      setEntries(prevEntries => [...prevEntries, ...result.items]);
+      if (url) {
+        // Append for pagination
+        setEntries(prevEntries => [...prevEntries, ...result.items]);
+      } else {
+        // Replace for initial load or refresh
+        setEntries(result.items);
+      }
       setEntriesResponse(result);
       setNextPageLink(result.links.find(l => l.rel === 'next-page') || null);
       setPrevPageLink(result.links.find(l => l.rel === 'previous-page') || null);

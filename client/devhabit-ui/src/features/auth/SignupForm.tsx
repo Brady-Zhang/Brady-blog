@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface SignupFormProps {
+  // eslint-disable-next-line no-unused-vars
   onSubmit: (name: string, email: string, password: string, confirmPassword: string) => void;
   error?: string | null;
 }

@@ -5,6 +5,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  // eslint-disable-next-line no-unused-vars
   login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 }

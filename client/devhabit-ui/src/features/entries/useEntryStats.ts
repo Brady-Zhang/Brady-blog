@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../api/config';
 import { fetchWithAuth } from '../../utils/fetchUtils';
@@ -20,7 +20,7 @@ export function useEntryStats() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getStats = async (): Promise<EntryStats | null> => {
+  const getStats = useCallback(async (): Promise<EntryStats | null> => {
     if (!accessToken) return null;
     setIsLoading(true);
     setError(null);
@@ -38,7 +38,7 @@ export function useEntryStats() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accessToken]);
 
   return {
     getStats,

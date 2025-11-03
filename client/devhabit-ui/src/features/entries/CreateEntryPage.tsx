@@ -15,6 +15,7 @@ export const CreateEntryPage: React.FC = () => {
   const { listHabits, isLoading: isLoadingHabits } = useHabits();
   const { createEntry, isLoading: isCreatingEntry } = useEntries();
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadHabits();
@@ -32,17 +33,25 @@ export const CreateEntryPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (isSubmitting || isCreatingEntry) return;
+    
+    setIsSubmitting(true);
 
-    const entryData: CreateEntryDto = {
-      habitId: selectedHabitId,
-      value: parseFloat(value),
-      notes: notes || undefined,
-      date: format(date, 'yyyy-MM-dd'),
-    };
+    try {
+      const entryData: CreateEntryDto = {
+        habitId: selectedHabitId,
+        value: parseFloat(value),
+        notes: notes || undefined,
+        date: format(date, 'yyyy-MM-dd'),
+      };
 
-    const result = await createEntry(entryData);
-    if (result) {
-      navigate('/entries');
+      const result = await createEntry(entryData);
+      if (result) {
+        navigate('/entries');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -136,9 +145,9 @@ export const CreateEntryPage: React.FC = () => {
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            disabled={isCreatingEntry || !selectedHabitId}
+            disabled={isSubmitting || isCreatingEntry || !selectedHabitId}
           >
-            {isCreatingEntry ? 'Creating...' : 'Create Entry'}
+            {(isSubmitting || isCreatingEntry) ? 'Creating...' : 'Create Entry'}
           </button>
         </div>
       </form>

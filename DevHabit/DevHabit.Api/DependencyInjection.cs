@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using DevHabit.Api.Database;
+using DevHabit.Api.DTOs.Blogs;
 using DevHabit.Api.DTOs.Entries;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
@@ -151,6 +152,8 @@ public static class DependencyInjection
         builder.Services.AddTransient<SortMappingProvider>();
         builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ =>
             HabitMappings.SortMapping);
+        builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<BlogDto, Blog>>(_ =>
+            BlogMappings.SortMapping);
         builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<EntryDto, Entry>>(_ =>
             EntryMappings.SortMapping);
 
