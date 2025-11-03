@@ -10,6 +10,9 @@ import { CreateHabitPage } from './features/habits/CreateHabitPage';
 import { HabitDetailsPage } from './features/habits/HabitDetailsPage';
 import { EditHabitPage } from './features/habits/EditHabitPage';
 import { HabitsPage } from './features/habits/HabitsPage';
+import { CreateBlogPage } from './features/blogs/CreateBlogPage';
+import { BlogDetailsPage } from './features/blogs/BlogDetailsPage';
+import { EditBlogPage } from './features/blogs/EditBlogPage';
 import { TagsPage } from './features/tags/TagsPage';
 import { EntriesPage } from './features/entries/EntriesPage';
 import { CreateEntryPage } from './features/entries/CreateEntryPage';
@@ -41,6 +44,9 @@ export default function App() {
             <Route path="/habits/create" element={<CreateHabitPage />} />
             <Route path="/habits/:id" element={<HabitDetailsPage />} />
             <Route path="/habits/:id/edit" element={<EditHabitPage />} />
+            <Route path="/blogs/create" element={<CreateBlogPage />} />
+            <Route path="/blogs/:id" element={<BlogDetailsPage />} />
+            <Route path="/blogs/:id/edit" element={<EditBlogPage />} />
             <Route path="/entries" element={<EntriesPage />} />
             <Route path="/entries/create" element={<CreateEntryPage />} />
             <Route path="/entries/create-batch" element={<CreateBatchEntriesPage />} />

@@ -22,6 +22,7 @@ interface ProblemDetails {
   status?: number;
   detail?: string;
   traceId?: string;
+  errors?: Record<string, string[]>;
 }
 
 class ApiError extends Error {
@@ -88,11 +89,34 @@ export async function fetchWithAuth<T>(
 
   if (!response.ok) {
     // Try to get error message from response
-    const errorData = await response.json();
-    throw new ApiError(
-      errorData.detail || errorData.message || `HTTP error! status: ${response.status}`,
-      errorData
-    );
+    let errorData: any;
+    try {
+      errorData = await response.json();
+    } catch {
+      const text = await response.text();
+      throw new ApiError(text || `HTTP error! status: ${response.status}`);
+    }
+    
+    // Build error message from validation errors if available
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    
+    if (errorData.errors && typeof errorData.errors === 'object') {
+      // Format validation errors
+      const errorMessages = Object.entries(errorData.errors)
+        .flatMap(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            return messages.map(msg => `${field}: ${msg}`);
+          }
+          return [`${field}: ${messages}`];
+        });
+      errorMessage = errorMessages.join('\n');
+    } else if (errorData.detail) {
+      errorMessage = errorData.detail;
+    } else if (errorData.message) {
+      errorMessage = errorData.message;
+    }
+    
+    throw new ApiError(errorMessage, errorData);
   }
 
   // Return null for 204 responses or empty bodies, otherwise parse JSON

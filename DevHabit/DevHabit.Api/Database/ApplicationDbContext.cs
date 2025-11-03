@@ -6,6 +6,8 @@ namespace DevHabit.Api.Database;
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     public DbSet<Habit> Habits { get; set; }
+    public DbSet<Blog> Blogs { get; set; }
+    public DbSet<BlogTag> BlogTags { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<HabitTag> HabitTags { get; set; }
     public DbSet<User> Users { get; set; }

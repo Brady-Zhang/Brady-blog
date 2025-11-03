@@ -24,6 +24,94 @@ namespace DevHabit.Api.Migrations.Application
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("DevHabit.Api.Entities.Blog", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(100000)
+                        .HasColumnType("character varying(100000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_archived");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("summary");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_blogs");
+
+                    b.HasIndex("CreatedAtUtc")
+                        .HasDatabaseName("ix_blogs_created_at_utc");
+
+                    b.HasIndex("IsPublished")
+                        .HasDatabaseName("ix_blogs_is_published");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_blogs_user_id");
+
+                    b.ToTable("blogs", "dev_habit");
+                });
+
+            modelBuilder.Entity("DevHabit.Api.Entities.BlogTag", b =>
+                {
+                    b.Property<string>("BlogId")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("blog_id");
+
+                    b.Property<string>("TagId")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tag_id");
+
+                    b.HasKey("BlogId", "TagId")
+                        .HasName("pk_blog_tags");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("ix_blog_tags_tag_id");
+
+                    b.ToTable("BlogTags", "dev_habit");
+                });
+
             modelBuilder.Entity("DevHabit.Api.Entities.Entry", b =>
                 {
                     b.Property<string>("Id")
@@ -376,6 +464,27 @@ namespace DevHabit.Api.Migrations.Application
                     b.ToTable("users", "dev_habit");
                 });
 
+            modelBuilder.Entity("DevHabit.Api.Entities.BlogTag", b =>
+                {
+                    b.HasOne("DevHabit.Api.Entities.Blog", "Blog")
+                        .WithMany("BlogTags")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_blog_tags_blogs_blog_id");
+
+                    b.HasOne("DevHabit.Api.Entities.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_blog_tags_tags_tag_id");
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("DevHabit.Api.Entities.Entry", b =>
                 {
                     b.HasOne("DevHabit.Api.Entities.Habit", "Habit")
@@ -529,6 +638,11 @@ namespace DevHabit.Api.Migrations.Application
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_tags_users_user_id");
+                });
+
+            modelBuilder.Entity("DevHabit.Api.Entities.Blog", b =>
+                {
+                    b.Navigation("BlogTags");
                 });
 
             modelBuilder.Entity("DevHabit.Api.Entities.Habit", b =>

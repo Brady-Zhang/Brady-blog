@@ -1,0 +1,14 @@
+using System.Text.Json.Serialization;
+
+namespace DevHabit.Api.DTOs.Blogs;
+
+public sealed class UpdateBlogDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Summary { get; set; }
+    public string Content { get; set; } = string.Empty;
+    
+    [JsonRequired]
+    public bool IsPublished { get; set; }
+}
+
