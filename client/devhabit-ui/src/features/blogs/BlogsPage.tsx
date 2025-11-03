@@ -22,9 +22,9 @@ export const BlogsPage: React.FC = () => {
     });
     if (result) {
       setBlogs(result.items);
-      setCreateLink(result.links.find(l => l.rel === 'create') || null);
-      setNextPageLink(result.links.find(l => l.rel === 'next-page') || null);
-      setPrevPageLink(result.links.find(l => l.rel === 'previous-page') || null);
+      setCreateLink(result.links.find((l: HypermediaLink) => l.rel === 'create') || null);
+      setNextPageLink(result.links.find((l: HypermediaLink) => l.rel === 'next-page') || null);
+      setPrevPageLink(result.links.find((l: HypermediaLink) => l.rel === 'previous-page') || null);
     }
   };
 
@@ -32,8 +32,8 @@ export const BlogsPage: React.FC = () => {
     const result = await listBlogs({ pageSize: 10, url: link.href });
     if (result) {
       setBlogs(result.items);
-      setNextPageLink(result.links.find(l => l.rel === 'next-page') || null);
-      setPrevPageLink(result.links.find(l => l.rel === 'previous-page') || null);
+      setNextPageLink(result.links.find((l: HypermediaLink) => l.rel === 'next-page') || null);
+      setPrevPageLink(result.links.find((l: HypermediaLink) => l.rel === 'previous-page') || null);
     }
   };
 

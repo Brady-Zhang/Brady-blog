@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEntryStats, type EntryStats } from './useEntryStats';
 import { parseISO, format, subDays } from 'date-fns';
 

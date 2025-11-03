@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
     });
     if (result) {
       setBlogs(result.items);
-      setCreateLink(result.links.find(l => l.rel === 'create') || null);
+      setCreateLink(result.links.find((l: HypermediaLink) => l.rel === 'create') || null);
     }
   };
 
