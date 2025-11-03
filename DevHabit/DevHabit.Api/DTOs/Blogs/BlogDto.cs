@@ -13,6 +13,7 @@ public sealed class BlogDto : ILinksResponse
     public DateTime? PublishedAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
+    public double? Relevance { get; set; }
     public List<LinkDto> Links { get; set; } = [];
 }
 
