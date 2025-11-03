@@ -33,6 +33,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             My Habits
           </Link>
           <Link
+            to="/blogs"
+            className={`block px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 ${isActive('/blogs')}`}
+          >
+            My Blogs
+          </Link>
+          <Link
             to="/entries"
             className={`block px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 ${isActive('/entries')}`}
           >

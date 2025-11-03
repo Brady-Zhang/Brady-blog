@@ -10,6 +10,7 @@ import { CreateHabitPage } from './features/habits/CreateHabitPage';
 import { HabitDetailsPage } from './features/habits/HabitDetailsPage';
 import { EditHabitPage } from './features/habits/EditHabitPage';
 import { HabitsPage } from './features/habits/HabitsPage';
+import { BlogsPage } from './features/blogs/BlogsPage';
 import { CreateBlogPage } from './features/blogs/CreateBlogPage';
 import { BlogDetailsPage } from './features/blogs/BlogDetailsPage';
 import { EditBlogPage } from './features/blogs/EditBlogPage';
@@ -19,17 +20,27 @@ import { CreateEntryPage } from './features/entries/CreateEntryPage';
 import { EditEntryPage } from './features/entries/EditEntryPage';
 import { CreateBatchEntriesPage } from './features/entries/CreateBatchEntriesPage';
 import { EntryImportsPage } from './features/entries/EntryImportsPage';
+import PublicLayout from './public/components/PublicLayout';
+import PublicBlogListPage from './public/pages/PublicBlogListPage';
+import PublicBlogDetailPage from './public/pages/PublicBlogDetailPage';
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public routes - 展示端（无需登录） */}
+          <Route element={<PublicLayout />}>
+            <Route path="/public/blog" element={<PublicBlogListPage />} />
+            <Route path="/public/blog/:id" element={<PublicBlogDetailPage />} />
+            {/* 可以继续添加更多公开展示页面 */}
+          </Route>
+
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected routes */}
+          {/* Protected routes - 运营端（需要登录） */}
           <Route
             element={
               <ProtectedRoute>
@@ -44,6 +55,7 @@ export default function App() {
             <Route path="/habits/create" element={<CreateHabitPage />} />
             <Route path="/habits/:id" element={<HabitDetailsPage />} />
             <Route path="/habits/:id/edit" element={<EditHabitPage />} />
+            <Route path="/blogs" element={<BlogsPage />} />
             <Route path="/blogs/create" element={<CreateBlogPage />} />
             <Route path="/blogs/:id" element={<BlogDetailsPage />} />
             <Route path="/blogs/:id/edit" element={<EditBlogPage />} />

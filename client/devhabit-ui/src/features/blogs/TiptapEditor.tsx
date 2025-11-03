@@ -78,6 +78,7 @@ interface TiptapEditorProps {
   // eslint-disable-next-line no-unused-vars
   onChange: (content: string) => void;
   editable?: boolean;
+  className?: string;
 }
 
 const MainToolbarContent = ({
@@ -182,7 +183,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, editable = true }) => {
+export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, editable = true, className = '' }) => {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
@@ -250,7 +251,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
   }
 
   return (
-    <div className="blog-editor-wrapper">
+    <div className={`blog-editor-wrapper ${className}`}>
       <EditorContext.Provider value={{ editor }}>
         {editable && (
           <Toolbar

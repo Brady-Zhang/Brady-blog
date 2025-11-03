@@ -113,6 +113,13 @@
     background: white;
   }
 
+  /* Blog Editor for Public Display - No border or background */
+  .blog-editor-wrapper.public-display {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
   .blog-editor-content {
     max-width: 100%;
     width: 100%;

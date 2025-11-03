@@ -25,5 +25,6 @@ export interface Blog extends HateoasResponse {
   createdAtUtc: string;
   updatedAtUtc: string | null;
   tags: string[];
+  relevance?: number;
 }
 
