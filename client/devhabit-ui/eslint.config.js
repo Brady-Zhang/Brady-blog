@@ -6,6 +6,9 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default [
+  {
+    ignores: ['src/components/tiptap-*'],
+  },
   eslint.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],

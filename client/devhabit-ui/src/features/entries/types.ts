@@ -1,7 +1,9 @@
 import { HateoasResponse } from '../../types/api';
 
 export enum EntrySource {
+  // eslint-disable-next-line no-unused-vars
   Manual = 0,
+  // eslint-disable-next-line no-unused-vars
   Automation = 1,
 }
 
@@ -60,9 +62,13 @@ export interface EntryImportJob extends HateoasResponse {
 }
 
 export enum EntryImportStatus {
+  // eslint-disable-next-line no-unused-vars
   Pending = 0,
+  // eslint-disable-next-line no-unused-vars
   Processing = 1,
+  // eslint-disable-next-line no-unused-vars
   Completed = 2,
+  // eslint-disable-next-line no-unused-vars
   Failed = 3,
 }
 

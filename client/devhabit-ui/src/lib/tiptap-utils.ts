@@ -355,6 +355,7 @@ export function selectionWithinConvertibleTypes(
  */
 export const handleImageUpload = async (
   file: File,
+  // eslint-disable-next-line no-unused-vars
   onProgress?: (event: { progress: number }) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
@@ -476,6 +477,7 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
   tr: Transaction,
   targets: readonly NodeWithPos[],
   attrName: A,
+  // eslint-disable-next-line no-unused-vars
   next: V | ((prev: V | undefined) => V | undefined)
 ): boolean {
   if (!targets.length) return false
@@ -492,7 +494,10 @@ export function updateNodesAttr<A extends string = string, V = unknown>(
     ] as V | undefined
     const resolvedNext =
       typeof next === "function"
-        ? (next as (p: V | undefined) => V | undefined)(prevValue)
+        ? (next as (
+            // eslint-disable-next-line no-unused-vars
+            p: V | undefined
+          ) => V | undefined)(prevValue)
         : next
 
     if (prevValue === resolvedNext) continue

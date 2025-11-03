@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 
 type ScrollTarget = RefObject<HTMLElement> | Window | null | undefined
 type EventTargetWithScroll = Window | HTMLElement | Document
+// eslint-disable-next-line no-unused-vars
+type EventListener = (event: Event) => void
 
 interface UseScrollingOptions {
   debounce?: number

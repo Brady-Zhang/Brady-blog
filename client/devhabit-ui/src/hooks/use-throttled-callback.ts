@@ -1,7 +1,7 @@
 import throttle from "lodash.throttle"
 
 import { useUnmount } from "@/hooks/use-unmount"
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 
 interface ThrottleSettings {
   leading?: boolean | undefined
@@ -21,13 +21,17 @@ const defaultOptions: ThrottleSettings = {
  * @param dependencies The dependencies to watch for changes
  * @param options The throttle options
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+ 
+export function useThrottledCallback<T extends (
+  // eslint-disable-next-line no-unused-vars
+  ...args: any[]
+) => any>(
   fn: T,
   wait = 250,
   dependencies: React.DependencyList = [],
   options: ThrottleSettings = defaultOptions
 ): {
+  // eslint-disable-next-line no-unused-vars
   (this: ThisParameterType<T>, ...args: Parameters<T>): ReturnType<T>
   cancel: () => void
   flush: () => void

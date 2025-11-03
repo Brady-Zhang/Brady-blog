@@ -1,9 +1,10 @@
 "use client"
 
-import { useCallback, useRef } from "react"
+import React, { useCallback, useRef } from "react"
 
 // basically Exclude<React.ClassAttributes<T>["ref"], string>
 type UserRef<T> =
+  // eslint-disable-next-line no-unused-vars
   | ((instance: T | null) => void)
   | React.RefObject<T | null>
   | null

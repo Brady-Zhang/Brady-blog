@@ -8,7 +8,7 @@ import type { Link as HypermediaLink } from '../../types/api';
 interface HabitDetailsProps {
   habit: Habit;
   onDelete?: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   onUpdate?: (updatedHabit: Habit) => void;
 }
 

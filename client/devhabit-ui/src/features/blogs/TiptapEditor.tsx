@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
@@ -75,6 +75,7 @@ import "@/components/tiptap-templates/simple/simple-editor.scss"
 
 interface TiptapEditorProps {
   content: string;
+  // eslint-disable-next-line no-unused-vars
   onChange: (content: string) => void;
   editable?: boolean;
 }

@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/react"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 type Orientation = "horizontal" | "vertical" | "both"
 
@@ -23,6 +23,7 @@ interface MenuNavigationOptions<T> {
   /**
    * Callback fired when an item is selected.
    */
+  // eslint-disable-next-line no-unused-vars
   onSelect?: (item: T) => void
   /**
    * Callback fired when the menu should close.
