@@ -3,6 +3,8 @@ import { HateoasResponse } from '../../types/api';
 export interface CreateBlogDto {
   title: string;
   summary?: string;
+  thumbnailTitle?: string;
+  thumbnailSummary?: string;
   content: string; // Tiptap JSON content as string
   isPublished: boolean;
 }
@@ -10,6 +12,8 @@ export interface CreateBlogDto {
 export interface UpdateBlogDto {
   title: string;
   summary?: string;
+  thumbnailTitle?: string;
+  thumbnailSummary?: string;
   content: string; // Tiptap JSON content as string
   isPublished: boolean;
 }
@@ -18,6 +22,8 @@ export interface Blog extends HateoasResponse {
   id: string;
   title: string;
   summary?: string;
+  thumbnailTitle?: string;
+  thumbnailSummary?: string;
   content: string;
   isPublished: boolean;
   isArchived: boolean;

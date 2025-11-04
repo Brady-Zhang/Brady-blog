@@ -23,6 +23,7 @@ import { EntryImportsPage } from './features/entries/EntryImportsPage';
 import PublicLayout from './public/components/PublicLayout';
 import PublicBlogListPage from './public/pages/PublicBlogListPage';
 import PublicBlogDetailPage from './public/pages/PublicBlogDetailPage';
+import AboutMePage from './public/pages/AboutMePage';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route path="/public/blog" element={<PublicBlogListPage />} />
             <Route path="/public/blog/:id" element={<PublicBlogDetailPage />} />
+            <Route path="/public/about" element={<AboutMePage />} />
             {/* 可以继续添加更多公开展示页面 */}
           </Route>
 

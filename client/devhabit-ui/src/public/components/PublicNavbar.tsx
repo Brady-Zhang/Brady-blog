@@ -1,26 +1,39 @@
 import { Link } from 'react-router-dom';
-import { HiCode } from 'react-icons/hi';
+import selfImage from '../../assets/self01.jpg';
 
 const PublicNavbar = () => {
-  return (
-    <nav className="border-b border-gray-300 px-6 py-4" style={{ backgroundColor: 'rgb(235, 235, 235)' }}>
+    return (
+    <nav className="sticky top-0 z-50 px-6 py-4 shadow-sm" style={{ backgroundColor: '#0f172a' }}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/public/blog" className="text-2xl font-bold flex items-center">
-          <HiCode className="inline-block w-7 h-7 mr-2" /> DevHabit
+        <Link to="/public/blog" className="text-xl font-bold flex items-center gap-3">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/20">
+            <img 
+              src={selfImage} 
+              alt="Brady ZHANG" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-white">Brady ZHANG</span>
         </Link>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
+          <Link 
+            to="/public/about" 
+            className="text-white hover:text-gray-300 font-medium transition-colors"
+          >
+            About Me
+          </Link>
           <Link 
             to="/public/blog" 
-            className="text-gray-700 hover:text-blue-600 font-medium"
+            className="text-white hover:text-gray-300 font-medium transition-colors"
           >
             Blog
           </Link>
           <Link 
             to="/login" 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+            className="px-4 py-2 text-white border border-white rounded-md hover:bg-white/10 font-medium transition-colors"
           >
-            Login
+            Log in
           </Link>
         </div>
       </div>

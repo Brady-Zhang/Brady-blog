@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';
 
@@ -14,9 +14,12 @@ interface BlogList {
 }
 
 const PublicBlogListPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const initialSearch = searchParams.get('search') || '';
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [activeSearchQuery, setActiveSearchQuery] = useState(initialSearch);
   const ringRef = useRef<HTMLDivElement>(null);
   
   // Tech Logos
@@ -49,7 +52,7 @@ const PublicBlogListPage = () => {
     const loadPublicBlogs = async () => {
       setIsLoading(true);
       try {
-        const searchParam = searchQuery.trim() ? `&search=${encodeURIComponent(searchQuery.trim())}` : '';
+        const searchParam = activeSearchQuery.trim() ? `&search=${encodeURIComponent(activeSearchQuery.trim())}` : '';
         const url = `${API_BASE_URL}/public/blogs?page=1&pageSize=10${searchParam}`;
         const response = await fetch(url, {
           headers: {
@@ -69,7 +72,35 @@ const PublicBlogListPage = () => {
     };
 
     loadPublicBlogs();
-  }, [searchQuery]);
+  }, [activeSearchQuery]);
+
+  const handleSearch = () => {
+    setActiveSearchQuery(searchQuery.trim());
+    // Update URL search params
+    if (searchQuery.trim()) {
+      setSearchParams({ search: searchQuery.trim() });
+    } else {
+      setSearchParams({});
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Sync activeSearchQuery with URL params when URL changes (e.g., browser back/forward)
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    // Only update if URL search param is different from active search
+    // This handles browser back/forward navigation
+    if (urlSearch !== activeSearchQuery) {
+      setActiveSearchQuery(urlSearch);
+      setSearchQuery(urlSearch);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const renderAnimatedText = (text: string) => {
     const words = text.split(' ');
@@ -195,18 +226,18 @@ const PublicBlogListPage = () => {
           <h1
             className="text-center text-6xl md:text-8xl font-black mb-4 select-none flex flex-col md:flex-row md:gap-4 gap-2 items-center justify-center tracking-tight"
             style={{
-              color: '#f0f0f0',
-              backgroundColor: '#666666',
+              color: '#ffffff',
+              backgroundColor: '#333333',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
-              textShadow: '1px 4px 4px #555555',
+              textShadow: '2px 4px 6px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3)',
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontWeight: 900,
               letterSpacing: '-0.02em',
             }}
-            aria-label="Welcome To My World"
-          >
-            {renderAnimatedText('Welcome To My World')}
+                        aria-label="Welcome To My Blog"
+            >
+            {renderAnimatedText('Welcome To My Blog')}
           </h1>
           
           {/* 3D Rotating Tech Logo Ring */}
@@ -232,11 +263,12 @@ const PublicBlogListPage = () => {
                 placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="flex-1 px-4 py-3 text-gray-700 focus:outline-none"
               />
               <button
                 className="px-6 py-3 bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors"
-                onClick={() => {}}
+                onClick={handleSearch}
               >
                 Search
               </button>
@@ -256,7 +288,9 @@ const PublicBlogListPage = () => {
             </div>
           ) : (
             blogs.map((blog, index) => {
-              const thumbnailText = getThumbnailText(blog.title);
+              // Use custom thumbnail fields if available, otherwise fall back to title extraction
+              const thumbnailTitle = blog.thumbnailTitle || (getThumbnailText(blog.title).join(' '));
+              const thumbnailSummary = blog.thumbnailSummary || '';
               const displayDate = blog.publishedAtUtc || blog.createdAtUtc;
               const dateFormatted = displayDate ? formatDate(displayDate) : '';
               
@@ -264,12 +298,12 @@ const PublicBlogListPage = () => {
                 <div key={blog.id}>
                   {index > 0 && <div className="border-t border-gray-300 my-8"></div>}
                   <Link
-                    to={`/public/blog/${blog.id}`}
+                    to={`/public/blog/${blog.id}${activeSearchQuery ? `?search=${encodeURIComponent(activeSearchQuery)}` : ''}`}
                     className="block hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <div className="flex flex-row">
                       {/* Thumbnail Side */}
-                      <div className="relative w-64 h-40 bg-gradient-to-br from-purple-600 to-purple-800 flex-shrink-0 overflow-hidden">
+                      <div className="relative w-70 h-40 bg-gradient-to-br from-purple-600 to-purple-800 flex-shrink-0 overflow-hidden rounded-lg">
                         {/* Abstract geometric shapes */}
                         <div className="absolute inset-0 opacity-20">
                           <div className="absolute top-2 left-2 w-16 h-16 bg-black rounded-full"></div>
@@ -280,16 +314,22 @@ const PublicBlogListPage = () => {
                         
                         {/* Text overlay */}
                         <div className="absolute inset-0 flex flex-col justify-center items-start px-6 py-4 z-10">
-                          {thumbnailText.map((text, idx) => (
-                            <div key={idx} className="text-white font-bold text-lg mb-1 tracking-wide">
-                              {text}
+                          <div className="text-white font-bold text-xl mb-2 tracking-wide px-3 py-1.5 bg-black/30 backdrop-blur-sm rounded-md">
+                            {thumbnailTitle}
+                          </div>
+                          {thumbnailSummary && (
+                            <div className="text-white font-medium text-xl tracking-wide px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-md">
+                              {thumbnailSummary}
                             </div>
-                          ))}
+                          )}
                         </div>
                         
                         {/* Logo in bottom-right corner */}
                         <div className="absolute bottom-3 right-3 bg-cyan-400 px-3 py-1 rounded z-10">
-                          <span className="text-white font-bold text-xs">MJ Tech</span>
+                          <div className="flex flex-col items-center leading-tight">
+                            <span className="text-white font-bold text-xs">BZ</span>
+                            <span className="text-white font-bold text-xs">Tech</span>
+                          </div>
                         </div>
                       </div>
 
