@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';

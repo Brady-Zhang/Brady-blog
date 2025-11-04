@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { FaGithub, FaLinkedin, FaPhone } from 'react-icons/fa';
 import { MdEmail, MdClose, MdContentCopy, MdOpenInNew } from 'react-icons/md';
-import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import selfImage from '../../assets/self.jpg';
 import reactSvg from '../../assets/react.svg';
 import self01Image from '../../assets/self01.jpg';
@@ -44,20 +43,6 @@ const AboutMePage: React.FC = () => {
 
   const setImageIndex = (projectIndex: number, index: number) => {
     setCurrentImageIndex(prev => ({ ...prev, [projectIndex]: index }));
-  };
-
-  const nextImage = (projectIndex: number) => {
-    const project = projects[projectIndex];
-    const current = getCurrentImageIndex(projectIndex);
-    const next = (current + 1) % project.images.length;
-    setImageIndex(projectIndex, next);
-  };
-
-  const prevImage = (projectIndex: number) => {
-    const project = projects[projectIndex];
-    const current = getCurrentImageIndex(projectIndex);
-    const prev = (current - 1 + project.images.length) % project.images.length;
-    setImageIndex(projectIndex, prev);
   };
 
   const contactInfo: ContactInfo[] = [
