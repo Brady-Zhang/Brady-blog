@@ -25,7 +25,7 @@ public sealed class UpsertHabitTagsDtoValidatorTests
     }
 
     [Fact]
-    public async Task Validate_ShouldReturnError_WhenTagIdsAreEmpty()
+    public async Task Validate_ShouldNotReturnError_WhenTagIdsAreEmpty()
     {
         // Arrange
         var dto = new UpsertHabitTagsDto
@@ -34,10 +34,10 @@ public sealed class UpsertHabitTagsDtoValidatorTests
         };
 
         // Act
-        TestValidationResult<UpsertHabitTagsDto>? result = await _validator.TestValidateAsync(dto);
+        TestValidationResult<UpsertHabitTagsDto>? result = await _validator.TestValidateAsync(dto);                                                             
 
         // Assert
-        result.ShouldHaveAnyValidationError();
+        result.ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]

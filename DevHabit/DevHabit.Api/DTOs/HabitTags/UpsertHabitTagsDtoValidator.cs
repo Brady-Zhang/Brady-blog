@@ -4,12 +4,8 @@ namespace DevHabit.Api.DTOs.HabitTags;
 
 public sealed class UpsertHabitTagsDtoValidator : AbstractValidator<UpsertHabitTagsDto>
 {
-        public UpsertHabitTagsDtoValidator()
+    public UpsertHabitTagsDtoValidator()
     {
-        RuleFor(x => x.TagIds)
-            .NotEmpty()
-            .WithMessage("At least one tag ID is required");
-
         RuleFor(x => x.TagIds)
             .Must(x => x.Count == x.Distinct().Count())
             .When(x => x.TagIds.Any())
