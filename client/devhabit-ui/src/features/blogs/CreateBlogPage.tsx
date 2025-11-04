@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useBlogs } from './useBlogs';
 import { TiptapEditor } from './TiptapEditor';
@@ -8,6 +8,8 @@ export const CreateBlogPage: React.FC = () => {
   const navigate = useNavigate();
   const { createBlog, isLoading, error } = useBlogs();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isRestoredRef = useRef(false);
+  const saveTimeoutRef = useRef<number | null>(null);
 
   const [formData, setFormData] = useState<CreateBlogDto>({
     title: '',
@@ -17,6 +19,59 @@ export const CreateBlogPage: React.FC = () => {
     content: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
     isPublished: false,
   });
+
+  const DRAFT_KEY = 'draft:createBlog';
+
+  // Restore draft (once)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          setFormData((prev) => ({ ...prev, ...parsed }));
+          isRestoredRef.current = true;
+        }
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced autosave to localStorage
+  useEffect(() => {
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+      } catch {}
+    }, 800);
+    return () => {
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [formData]);
+
+  // beforeunload guard if there are unsaved changes (i.e., any non-empty field)
+  useEffect(() => {
+    const hasContent = Boolean(
+      formData.title ||
+      formData.summary ||
+      formData.thumbnailTitle ||
+      formData.thumbnailSummary ||
+      (formData.content && formData.content !== JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }))
+    );
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasContent && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [formData, isSubmitting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +83,8 @@ export const CreateBlogPage: React.FC = () => {
     try {
       const result = await createBlog(formData);
       if (result) {
+        // clear local draft on success
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
         navigate(`/blogs/${result.id}`);
       }
     } finally {

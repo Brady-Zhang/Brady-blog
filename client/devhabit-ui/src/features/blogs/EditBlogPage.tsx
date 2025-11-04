@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBlogs } from './useBlogs';
 import { TiptapEditor } from './TiptapEditor';
@@ -12,6 +12,9 @@ export const EditBlogPage: React.FC = () => {
   const { getBlog, updateBlog, deleteBlog, isLoading, error: apiError } = useBlogs();
   const [error, setError] = useState<string | null>(null);
   const [blog, setBlog] = useState<Blog | null>(null);
+  const saveTimeoutRef = useRef<number | null>(null);
+  const restoredRef = useRef(false);
+  const [hasLocalDraft, setHasLocalDraft] = useState(false);
 
   const [formData, setFormData] = useState<UpdateBlogDto>({
     title: '',
@@ -22,12 +25,52 @@ export const EditBlogPage: React.FC = () => {
     isPublished: false,
   });
 
+  const draftKey = id ? `draft:editBlog:${id}` : null;
+
+  // Early restore draft so refresh without auth still shows user's content
+  useEffect(() => {
+    if (!draftKey) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          setFormData((prev) => ({ ...prev, ...parsed }));
+          setHasLocalDraft(true);
+          restoredRef.current = true;
+        }
+      }
+    } catch {}
+  }, [draftKey]);
+
   useEffect(() => {
     loadBlog();
   }, [id]);
 
   useEffect(() => {
     if (blog) {
+      // If there is a local draft, offer to restore it
+      if (draftKey) {
+        try {
+          const raw = localStorage.getItem(draftKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const shouldRestore = window.confirm('检测到未提交草稿，是否恢复到编辑器？');
+            if (shouldRestore) {
+              setFormData({
+                title: parsed.title ?? blog.title,
+                summary: parsed.summary ?? (blog.summary || ''),
+                thumbnailTitle: parsed.thumbnailTitle ?? (blog.thumbnailTitle || ''),
+                thumbnailSummary: parsed.thumbnailSummary ?? (blog.thumbnailSummary || ''),
+                content: parsed.content ?? blog.content,
+                isPublished: typeof parsed.isPublished === 'boolean' ? parsed.isPublished : blog.isPublished,
+              });
+              restoredRef.current = true;
+              return;
+            }
+          }
+        } catch {}
+      }
       setFormData({
         title: blog.title,
         summary: blog.summary || '',
@@ -69,9 +112,48 @@ export const EditBlogPage: React.FC = () => {
 
     const result = await updateBlog(updateLink, formData);
     if (result) {
+      // clear draft on success
+      if (draftKey) {
+        try { localStorage.removeItem(draftKey); } catch {}
+      }
       navigate(`/blogs/${blog.id}`);
     }
   };
+
+  // Debounced autosave for edit draft
+  useEffect(() => {
+    if (!draftKey) return;
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = window.setTimeout(() => {
+      try { localStorage.setItem(draftKey, JSON.stringify(formData)); } catch {}
+    }, 800);
+    return () => {
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [draftKey, formData]);
+
+  // beforeunload guard
+  useEffect(() => {
+    const hasContent = Boolean(
+      formData.title ||
+      formData.summary ||
+      formData.thumbnailTitle ||
+      formData.thumbnailSummary ||
+      (formData.content && formData.content !== JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }))
+    );
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasContent) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [formData]);
 
   const handleDelete = async () => {
     if (!blog) return;
@@ -116,7 +198,7 @@ export const EditBlogPage: React.FC = () => {
     );
   }
 
-  if (isLoading || !blog) {
+  if (isLoading || (!blog && !hasLocalDraft)) {
     return (
       <div className="max-w-5xl mx-auto p-6">
         <div className="animate-pulse">

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Link, useLocation, useSearchParams, useNavigationType } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';
 
@@ -18,9 +18,65 @@ const PublicBlogListPage = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const initialSearch = searchParams.get('search') || '';
+  const initialPage = Number.parseInt(searchParams.get('page') || '1', 10) || 1;
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [activeSearchQuery, setActiveSearchQuery] = useState(initialSearch);
+  const [page, setPage] = useState<number>(initialPage);
+  const initialPageSize = Number.parseInt(searchParams.get('pageSize') || '10', 10) || 10;
+  const [pageSize, setPageSize] = useState<number>(initialPageSize);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState<boolean>(false);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const ringRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const hasRestoredRef = useRef<boolean>(false);
+  const scrollInstantToY = (y: number) => {
+    const se = (document.scrollingElement || document.documentElement) as HTMLElement;
+    se.scrollTop = Math.max(0, y);
+  };
+  const scrollInstantToElementTop = (el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const absoluteTop = rect.top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+    scrollInstantToY(absoluteTop);
+  };
+  // Build a scroll key that ignores the transient `restore` flag
+  const searchForKey = (() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      params.delete('restore');
+      const s = params.toString();
+      return s ? `?${s}` : '';
+    } catch {
+      return location.search || '';
+    }
+  })();
+  const SCROLL_KEY = `scroll:${location.pathname}${searchForKey}`;
+  const shouldForceRestore = (searchParams.get('restore') || '') === '1';
+
+  // Earliest possible, pre-paint restore: prefer hash anchor, then saved Y
+  useLayoutEffect(() => {
+    if (hasRestoredRef.current) return;
+    if (navigationType === 'POP' || shouldForceRestore) {
+      try {
+        if (location.hash) {
+          const id = location.hash.replace('#', '');
+          const el = document.getElementById(id) as HTMLElement | null;
+          if (el) {
+            scrollInstantToElementTop(el);
+            hasRestoredRef.current = true;
+            return;
+          }
+        }
+        const saved = sessionStorage.getItem(SCROLL_KEY);
+        const y = saved ? parseInt(saved, 10) : NaN;
+        if (!Number.isNaN(y) && y > 0) {
+          scrollInstantToY(y);
+          hasRestoredRef.current = true;
+        }
+      } catch {}
+    }
+  }, [SCROLL_KEY, navigationType, shouldForceRestore, location.hash]);
   
   // Tech Logos
   const logos = [
@@ -53,7 +109,7 @@ const PublicBlogListPage = () => {
       setIsLoading(true);
       try {
         const searchParam = activeSearchQuery.trim() ? `&search=${encodeURIComponent(activeSearchQuery.trim())}` : '';
-        const url = `${API_BASE_URL}/public/blogs?page=1&pageSize=10${searchParam}`;
+        const url = `${API_BASE_URL}/public/blogs?page=${page}&pageSize=${pageSize}${searchParam}`;
         const response = await fetch(url, {
           headers: {
             Accept: 'application/json',
@@ -63,6 +119,9 @@ const PublicBlogListPage = () => {
         if (response.ok) {
           const data: BlogList = await response.json();
           setBlogs(data.items.map(item => ({ ...item, links: [] })));
+          setHasNextPage(Boolean(data.hasNextPage));
+          setHasPreviousPage(Boolean(data.hasPreviousPage));
+          setTotalPages(data.totalPages || 1);
         }
       } catch (err) {
         console.error('Failed to load public blogs:', err);
@@ -72,16 +131,193 @@ const PublicBlogListPage = () => {
     };
 
     loadPublicBlogs();
-  }, [activeSearchQuery]);
+  }, [activeSearchQuery, page, pageSize]);
+
+  // Restore scroll after data loads and DOM is ready (before paint to avoid flicker)
+  useLayoutEffect(() => {
+    if (hasRestoredRef.current) return;
+    if (!isLoading && blogs.length > 0) {
+      // Ensure DOM is fully rendered
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            if (navigationType === 'POP' || shouldForceRestore) {
+              // If there is a hash anchor, prefer it and stop
+              if (location.hash) {
+                const id = location.hash.replace('#', '');
+                const el = document.getElementById(id) as HTMLElement | null;
+                if (el) {
+                  scrollInstantToElementTop(el);
+                  hasRestoredRef.current = true;
+                  return;
+                }
+              }
+              // Prefer element-based restore using the last clicked blog id
+              try {
+                const targetId = sessionStorage.getItem('restoreTargetId');
+                if (targetId) {
+                  const el = document.getElementById(`blog-${targetId}`) as HTMLElement | null;
+                  if (el) {
+                    scrollInstantToElementTop(el);
+                    // Clean once used
+                    sessionStorage.removeItem('restoreTargetId');
+                    hasRestoredRef.current = true;
+                    return;
+                  }
+                }
+              } catch {}
+              const saved = sessionStorage.getItem(SCROLL_KEY);
+              if (saved) {
+                const y = parseInt(saved, 10);
+                if (!Number.isNaN(y) && y > 0) {
+                  scrollInstantToY(y);
+                } else {
+                  scrollInstantToY(0);
+                }
+              } else {
+                scrollInstantToY(0);
+              }
+              hasRestoredRef.current = true;
+            } else {
+              // For normal navigation into list, do not reuse saved positions
+              scrollInstantToY(0);
+              hasRestoredRef.current = true;
+            }
+          } catch {}
+        });
+      });
+    }
+  }, [isLoading, blogs.length, SCROLL_KEY, navigationType, shouldForceRestore]);
+
+  // Save scroll position periodically and on unmount
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      try { window.history.scrollRestoration = 'manual'; } catch {}
+    }
+
+    const saveScroll = () => {
+      try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch {}
+    };
+
+    // Save on scroll (throttled)
+    let scrollTimer: number | null = null;
+    const handleScroll = () => {
+      if (scrollTimer) return;
+      scrollTimer = window.setTimeout(() => {
+        saveScroll();
+        scrollTimer = null;
+      }, 300);
+    };
+
+    // Save on visibility change (tab switch, etc.)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        saveScroll();
+      }
+    };
+
+    // Save on page lifecycle events
+    window.addEventListener('beforeunload', saveScroll);
+    window.addEventListener('pagehide', saveScroll as any);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', saveScroll);
+      window.removeEventListener('pagehide', saveScroll as any);
+      if (scrollTimer) clearTimeout(scrollTimer);
+      saveScroll(); // Final save on unmount
+    };
+  }, [SCROLL_KEY]);
+
+  // Restore scroll on location change (browser back/forward)
+  useLayoutEffect(() => {
+    if (hasRestoredRef.current) return;
+    const restoreScroll = () => {
+      if (hasRestoredRef.current) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            if (navigationType === 'POP' || shouldForceRestore) {
+              // If there is a hash anchor, prefer it and stop
+              if (location.hash) {
+                const id = location.hash.replace('#', '');
+                const el = document.getElementById(id) as HTMLElement | null;
+                if (el) {
+                  scrollInstantToElementTop(el);
+                  hasRestoredRef.current = true;
+                  return;
+                }
+              }
+              // Prefer element-based restore using the last clicked blog id
+              try {
+                const targetId = sessionStorage.getItem('restoreTargetId');
+                if (targetId) {
+                  const el = document.getElementById(`blog-${targetId}`) as HTMLElement | null;
+                  if (el) {
+                    scrollInstantToElementTop(el);
+                    sessionStorage.removeItem('restoreTargetId');
+                    hasRestoredRef.current = true;
+                    return;
+                  }
+                }
+              } catch {}
+              const saved = sessionStorage.getItem(SCROLL_KEY);
+              if (saved) {
+                const y = parseInt(saved, 10);
+                if (!Number.isNaN(y) && y > 0) {
+                  scrollInstantToY(y);
+                  hasRestoredRef.current = true;
+                  return;
+                }
+              }
+              // No element and no valid saved Y yet: do not force top here; allow data-loaded effect to handle later
+            } else {
+              scrollInstantToY(0);
+              hasRestoredRef.current = true;
+            }
+          } catch {}
+        });
+      });
+    };
+
+    // Restore immediately
+    restoreScroll();
+
+    // Also restore after a short delay to handle slow renders
+    const timer = setTimeout(restoreScroll, 200);
+    // Also restore after all resources load (images, fonts)
+    window.addEventListener('load', restoreScroll, { once: true });
+    // Also after fonts are ready (to avoid reflow shifting)
+    try {
+      // document.fonts may not exist in all browsers
+      // @ts-ignore
+      const fonts = document.fonts;
+      if (fonts && typeof fonts.ready?.then === 'function') {
+        // @ts-ignore
+        fonts.ready.then(() => restoreScroll());
+      }
+    } catch {}
+
+    return () => {
+      clearTimeout(timer);
+      // no need to remove once load listener
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search, navigationType, shouldForceRestore]);
 
   const handleSearch = () => {
     setActiveSearchQuery(searchQuery.trim());
     // Update URL search params
     if (searchQuery.trim()) {
-      setSearchParams({ search: searchQuery.trim() });
+      setSearchParams({ search: searchQuery.trim(), page: '1', pageSize: String(pageSize) });
     } else {
-      setSearchParams({});
+      setSearchParams({ page: '1', pageSize: String(pageSize) });
     }
+    setPage(1);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -90,17 +326,44 @@ const PublicBlogListPage = () => {
     }
   };
 
-  // Sync activeSearchQuery with URL params when URL changes (e.g., browser back/forward)
+  // Sync activeSearchQuery, page, pageSize with URL params when URL changes (e.g., browser back/forward)
   useEffect(() => {
     const urlSearch = searchParams.get('search') || '';
+    const urlPage = Number.parseInt(searchParams.get('page') || '1', 10) || 1;
+    const urlPageSize = Number.parseInt(searchParams.get('pageSize') || String(pageSize), 10) || pageSize;
     // Only update if URL search param is different from active search
     // This handles browser back/forward navigation
     if (urlSearch !== activeSearchQuery) {
       setActiveSearchQuery(urlSearch);
       setSearchQuery(urlSearch);
     }
+    if (urlPage !== page) {
+      setPage(urlPage);
+    }
+    if (urlPageSize !== pageSize) {
+      setPageSize(urlPageSize);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  const goToPage = (nextPage: number) => {
+    const params: Record<string, string> = {};
+    if (activeSearchQuery.trim()) params.search = activeSearchQuery.trim();
+    params.page = String(nextPage);
+    params.pageSize = String(pageSize);
+    setSearchParams(params);
+    setPage(nextPage);
+  };
+
+  const changePageSize = (newSize: number) => {
+    const nextSize = Math.max(1, newSize);
+    setPageSize(nextSize);
+    // reset to page 1 when page size changes
+    const params: Record<string, string> = { page: '1', pageSize: String(nextSize) };
+    if (activeSearchQuery.trim()) params.search = activeSearchQuery.trim();
+    setSearchParams(params);
+    setPage(1);
+  };
 
   const renderAnimatedText = (text: string) => {
     const words = text.split(' ');
@@ -253,7 +516,7 @@ const PublicBlogListPage = () => {
           </div>
         </div>
 
-        {/* Search Section */}
+        {/* Search & Controls Section */}
         <div className="mb-12">
           <h2
             className="text-center text-5xl md:text-6xl font-black mb-8 select-none"
@@ -271,7 +534,7 @@ const PublicBlogListPage = () => {
           >
             {renderAnimatedText('Previous Blog Posts')}
           </h2>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-4">
             <div className="w-full max-w-2xl">
               <div className="flex rounded-lg overflow-hidden shadow-sm border border-gray-300 bg-white w-full">
                 <input
@@ -287,6 +550,57 @@ const PublicBlogListPage = () => {
                   onClick={handleSearch}
                 >
                   Search
+                </button>
+              </div>
+            </div>
+            <div className="w-full max-w-2xl flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <span>Page size:</span>
+                <select
+                  className="border border-gray-300 rounded px-2 py-1 bg-white"
+                  value={pageSize}
+                  onChange={(e) => changePageSize(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>Jump to:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={Math.max(1, totalPages)}
+                  className="w-20 border border-gray-300 rounded px-2 py-1"
+                  defaultValue={page}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const raw = (e.target as HTMLInputElement).value;
+                      const n = Number.parseInt(raw, 10);
+                      if (!Number.isNaN(n)) {
+                        const clamped = Math.min(Math.max(1, n), Math.max(1, totalPages));
+                        goToPage(clamped);
+                      }
+                    }
+                  }}
+                />
+                <button
+                  className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50"
+                  onClick={(e) => {
+                    const container = e.currentTarget.parentElement;
+                    const input = container ? (container.querySelector('input[type="number"]') as HTMLInputElement | null) : null;
+                    if (input) {
+                      const n = Number.parseInt(input.value, 10);
+                      if (!Number.isNaN(n)) {
+                        const clamped = Math.min(Math.max(1, n), Math.max(1, totalPages));
+                        goToPage(clamped);
+                      }
+                    }
+                  }}
+                >
+                  Go
                 </button>
               </div>
             </div>
@@ -313,11 +627,25 @@ const PublicBlogListPage = () => {
               const dateFormatted = displayDate ? formatDate(displayDate) : '';
               
               return (
-                <div key={blog.id}>
+                <div key={blog.id} id={`blog-${blog.id}`}>
                   {index > 0 && <div className="border-t border-gray-300 my-8"></div>}
                   <Link
-                    to={`/public/blog/${blog.id}${activeSearchQuery ? `?search=${encodeURIComponent(activeSearchQuery)}` : ''}`}
+                    to={`/public/blog/${blog.id}?${[
+                      activeSearchQuery ? `search=${encodeURIComponent(activeSearchQuery)}` : '',
+                      `page=${encodeURIComponent(String(page))}`,
+                      `pageSize=${encodeURIComponent(String(pageSize))}`,
+                    ].filter(Boolean).join('&')}`}
                     className="block hover:opacity-80 transition-opacity cursor-pointer"
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+                        sessionStorage.setItem('restoreTargetId', String(blog.id));
+                        // Inject hash into current history entry so that browser back uses the anchor
+                        const urlWithoutHash = `${location.pathname}${location.search}`;
+                        const nextUrlWithHash = `${urlWithoutHash}#blog-${blog.id}`;
+                        window.history.replaceState(window.history.state, '', nextUrlWithHash);
+                      } catch {}
+                    }}
                   >
                     <div className="flex flex-row">
                       {/* Thumbnail Side */}
@@ -383,6 +711,24 @@ const PublicBlogListPage = () => {
               );
             })
           )}
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button
+              className="px-4 py-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+              onClick={() => goToPage(Math.max(1, page - 1))}
+              disabled={!hasPreviousPage || isLoading}
+            >
+              ← Previous
+            </button>
+            <span className="text-sm text-gray-500">Page {page} {totalPages > 1 ? `of ${totalPages}` : ''}</span>
+            <button
+              className="px-4 py-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+              onClick={() => goToPage(page + 1)}
+              disabled={!hasNextPage || isLoading}
+            >
+              Next →
+            </button>
+          </div>
           </div>
         </div>
       </div>

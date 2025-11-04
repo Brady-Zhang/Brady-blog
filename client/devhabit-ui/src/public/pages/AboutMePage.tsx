@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { FaGithub, FaLinkedin, FaPhone } from 'react-icons/fa';
 import { MdEmail, MdClose, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 import selfImage from '../../assets/self.jpg';
@@ -21,6 +21,11 @@ interface Project {
 }
 
 const AboutMePage: React.FC = () => {
+  useLayoutEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    } catch {}
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: number]: number }>({});
