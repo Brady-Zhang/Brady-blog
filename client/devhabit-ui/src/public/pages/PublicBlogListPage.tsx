@@ -224,7 +224,7 @@ const PublicBlogListPage = () => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1
-            className="text-center text-6xl md:text-8xl font-black mb-4 select-none flex flex-col md:flex-row md:gap-4 gap-2 items-center justify-center tracking-tight"
+            className="text-center text-6xl md:text-8xl font-black mb-2 select-none flex flex-col md:flex-row md:gap-4 gap-2 items-center justify-center tracking-tight"
             style={{
               color: '#ffffff',
               backgroundColor: '#333333',
@@ -241,7 +241,7 @@ const PublicBlogListPage = () => {
           </h1>
           
           {/* 3D Rotating Tech Logo Ring */}
-          <div className="relative w-full h-[400px] -mt-8 mb-8 overflow-hidden" style={{ perspective: '800px' }}>
+          <div className="relative w-full h-[400px] -mt-20 mb-8 overflow-hidden" style={{ perspective: '800px' }}>
             <div 
               ref={ringRef}
               className="absolute inset-0 m-auto w-[600px] h-[300px]"
@@ -254,30 +254,48 @@ const PublicBlogListPage = () => {
         </div>
 
         {/* Search Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-8">Previous Blog Posts</h2>
+        <div className="mb-12">
+          <h2
+            className="text-center text-5xl md:text-6xl font-black mb-8 select-none"
+            style={{
+              color: '#ffffff',
+              backgroundColor: '#000000',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              textShadow: '3px 5px 8px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 0, 0, 0.5), 1px 2px 4px rgba(0, 0, 0, 0.9)',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+            }}
+            aria-label="Previous Blog Posts"
+          >
+            {renderAnimatedText('Previous Blog Posts')}
+          </h2>
           <div className="flex justify-center">
-            <div className="flex rounded-lg overflow-hidden shadow-sm border border-gray-300 bg-white max-w-2xl w-full">
-              <input
-                type="text"
-                placeholder="Search articles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-1 px-4 py-3 text-gray-700 focus:outline-none"
-              />
-              <button
-                className="px-6 py-3 bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors"
-                onClick={handleSearch}
-              >
-                Search
-              </button>
+            <div className="w-full max-w-2xl">
+              <div className="flex rounded-lg overflow-hidden shadow-sm border border-gray-300 bg-white w-full">
+                <input
+                  type="text"
+                  placeholder="Search articles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1 px-4 py-3 text-gray-700 focus:outline-none"
+                />
+                <button
+                  className="px-6 py-3 bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors"
+                  onClick={handleSearch}
+                >
+                  Search
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Blog List */}
-        <div className="space-y-0">
+        <div className="flex justify-center">
+          <div className="w-full max-w-2xl space-y-0">
           {isLoading ? (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">Loading...</p>
@@ -303,7 +321,7 @@ const PublicBlogListPage = () => {
                   >
                     <div className="flex flex-row">
                       {/* Thumbnail Side */}
-                      <div className="relative w-70 h-40 bg-gradient-to-br from-purple-600 to-purple-800 flex-shrink-0 overflow-hidden rounded-lg">
+                      <div className="relative w-70 h-40 bg-gradient-to-br from-purple-600 to-purple-800 flex-shrink-0 overflow-hidden rounded-lg shadow-xl hover:shadow-2xl transition-shadow">
                         {/* Abstract geometric shapes */}
                         <div className="absolute inset-0 opacity-20">
                           <div className="absolute top-2 left-2 w-16 h-16 bg-black rounded-full"></div>
@@ -365,6 +383,7 @@ const PublicBlogListPage = () => {
               );
             })
           )}
+          </div>
         </div>
       </div>
     </div>

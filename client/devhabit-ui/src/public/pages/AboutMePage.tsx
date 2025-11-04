@@ -257,13 +257,13 @@ const AboutMePage: React.FC = () => {
                            cursor = 'pointer';
                          } else if (normalizedDiff === -1 || (normalizedDiff === total - 1 && total === 2)) {
                            // Left (Partial)
-                           transform = 'translateX(-120px) scale(0.7) rotateY(30deg)';
+                           transform = 'translateX(-120px) scale(0.7) rotateY(20deg)';
                            opacity = 0.6;
                            zIndex = 99;
                            cursor = 'pointer';
                          } else if (normalizedDiff === 1 || (normalizedDiff === -(total - 1) && total === 2)) {
                            // Right (Partial)
-                           transform = 'translateX(120px) scale(0.7) rotateY(-30deg)';
+                           transform = 'translateX(120px) scale(0.7) rotateY(-20deg)';
                            opacity = 0.6;
                            zIndex = 99;
                            cursor = 'pointer';
@@ -290,7 +290,7 @@ const AboutMePage: React.FC = () => {
                                zIndex,
                                visibility,
                                cursor,
-                               transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease-in-out, z-index 0s linear 0.4s',
+                               transition: 'transform 1.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.8s ease-in-out, z-index 0s linear 0.4s',
                                transformOrigin: 'center center',
                                backfaceVisibility: 'hidden',
                                WebkitBackfaceVisibility: 'hidden',
@@ -313,7 +313,7 @@ const AboutMePage: React.FC = () => {
                                className="w-full h-full object-cover rounded-lg shadow-xl select-none"
                                draggable="false"
                                style={{
-                                 transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                                 transition: 'all 1.8s cubic-bezier(0.4, 0, 0.2, 1)',
                                  backfaceVisibility: 'hidden',
                                  WebkitBackfaceVisibility: 'hidden',
                                }}
