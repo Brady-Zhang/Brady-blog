@@ -12,6 +12,8 @@ export const CreateBlogPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateBlogDto>({
     title: '',
     summary: '',
+    thumbnailTitle: '',
+    thumbnailSummary: '',
     content: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
     isPublished: false,
   });
@@ -90,6 +92,38 @@ export const CreateBlogPage: React.FC = () => {
             rows={2}
             placeholder="Brief summary of your blog..."
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Thumbnail Title (Optional)
+          </label>
+          <input
+            type="text"
+            name="thumbnailTitle"
+            value={formData.thumbnailTitle}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border rounded-md text-lg"
+            maxLength={200}
+            placeholder="Custom title for thumbnail display..."
+          />
+          <p className="mt-1 text-sm text-gray-500">This will be displayed on the thumbnail card instead of the main title</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Thumbnail Summary (Optional)
+          </label>
+          <textarea
+            name="thumbnailSummary"
+            value={formData.thumbnailSummary}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border rounded-md"
+            maxLength={300}
+            rows={2}
+            placeholder="Custom summary for thumbnail display..."
+          />
+          <p className="mt-1 text-sm text-gray-500">This will be displayed below the thumbnail title</p>
         </div>
 
         <div>

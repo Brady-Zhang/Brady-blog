@@ -7,6 +7,8 @@ public sealed class BlogWithTagsDto : ILinksResponse
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? Summary { get; set; }
+    public string? ThumbnailTitle { get; set; }
+    public string? ThumbnailSummary { get; set; }
     public string Content { get; set; } = string.Empty;
     public bool IsPublished { get; set; }
     public bool IsArchived { get; set; }

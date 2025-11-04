@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { TiptapEditor } from '../../features/blogs/TiptapEditor';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';
 
 const PublicBlogDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const searchQuery = searchParams.get('search') || '';
+  const backUrl = searchQuery ? `/public/blog?search=${encodeURIComponent(searchQuery)}` : '/public/blog';
 
   useEffect(() => {
     loadPublicBlog();
@@ -57,7 +61,7 @@ const PublicBlogDetailPage = () => {
     return (
       <div className="max-w-5xl mx-auto p-6 text-center">
         <p className="text-red-600 mb-4">{error}</p>
-        <Link to="/public/blog" className="text-blue-600 hover:text-blue-800">
+        <Link to={backUrl} className="text-blue-600 hover:text-blue-800">
           ← Back to Blog List
         </Link>
       </div>
@@ -82,9 +86,9 @@ const PublicBlogDetailPage = () => {
   return (
     <div className="py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link 
-            to="/public/blog" 
+                <div className="mb-8">
+          <Link
+            to={backUrl}
             className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
           >
             ← Back to Blog List

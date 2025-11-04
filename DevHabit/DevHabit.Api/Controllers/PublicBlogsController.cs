@@ -209,21 +209,23 @@ public sealed class PublicBlogsController(
     /// <summary>
     /// Maps Blog entity to BlogDto
     /// </summary>
-    private static BlogDto MapBlogToDto(Blog blog)
-    {
-        return new BlogDto
-        {
-            Id = blog.Id,
-            Title = blog.Title,
-            Summary = blog.Summary,
-            Content = blog.Content,
-            IsPublished = blog.IsPublished,
-            IsArchived = blog.IsArchived,
-            PublishedAtUtc = blog.PublishedAtUtc,
-            CreatedAtUtc = blog.CreatedAtUtc,
-            UpdatedAtUtc = blog.UpdatedAtUtc,
-            Links = []
-        };
-    }
+          private static BlogDto MapBlogToDto(Blog blog)
+      {
+          return new BlogDto
+          {
+              Id = blog.Id,
+              Title = blog.Title,
+              Summary = blog.Summary,
+              ThumbnailTitle = blog.ThumbnailTitle,
+              ThumbnailSummary = blog.ThumbnailSummary,
+              Content = blog.Content,
+              IsPublished = blog.IsPublished,
+              IsArchived = blog.IsArchived,
+              PublishedAtUtc = blog.PublishedAtUtc,
+              CreatedAtUtc = blog.CreatedAtUtc,
+              UpdatedAtUtc = blog.UpdatedAtUtc,
+              Links = []
+          };
+      }
 }
 

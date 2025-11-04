@@ -20,6 +20,12 @@ public sealed class BlogConfiguration : IEntityTypeConfiguration<Blog>
         builder.Property(b => b.Summary)
             .HasMaxLength(500);
 
+        builder.Property(b => b.ThumbnailTitle)
+            .HasMaxLength(200);
+
+        builder.Property(b => b.ThumbnailSummary)
+            .HasMaxLength(300);
+
         builder.Property(b => b.Content)
             .IsRequired()
             .HasMaxLength(100000);
