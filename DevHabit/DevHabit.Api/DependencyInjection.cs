@@ -14,6 +14,7 @@ using DevHabit.Api.Middleware;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using DevHabit.Api.Settings;
+using Azure.Storage.Blobs;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -233,6 +234,11 @@ public static class DependencyInjection
             builder.Configuration.GetSection(TagsOptions.SectionName));
 
         builder.Services.AddSingleton<InMemoryETagStore>();
+
+        // Azure Blob Storage
+        builder.Services.Configure<BlobStorageOptions>(
+            builder.Configuration.GetSection(BlobStorageOptions.SectionName));
+        builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
         return builder;
     }

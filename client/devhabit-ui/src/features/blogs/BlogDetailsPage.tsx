@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBlogs } from './useBlogs';
 import { TiptapEditor } from './TiptapEditor';
 import { API_BASE_URL } from '../../api/config';
@@ -8,9 +8,11 @@ import type { Link as HypermediaLink } from '../../types/api';
 
 export const BlogDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getBlog, updateBlog, isLoading, error } = useBlogs();
+  const navigate = useNavigate();
+  const { getBlog, updateBlog, deleteBlog, isLoading, error } = useBlogs();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState<UpdateBlogDto>({
     title: '',
     summary: '',
@@ -87,6 +89,15 @@ export const BlogDetailsPage: React.FC = () => {
     }
   };
 
+  const confirmDelete = async () => {
+    if (!blog) return;
+    const deleteLink = blog.links.find(link => link.rel === 'delete');
+    if (!deleteLink) return;
+    const ok = await deleteBlog(deleteLink);
+    if (ok) navigate('/blogs');
+    setShowDeleteModal(false);
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -132,12 +143,44 @@ export const BlogDetailsPage: React.FC = () => {
           ← Back to Dashboard
         </Link>
         {!isEditing && (
-          <button
-            onClick={handleEdit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Edit Blog
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleEdit}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Edit Blog
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteModal(false)}></div>
+            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+              <h2 className="text-xl font-semibold mb-2">Delete this blog?</h2>
+              <p className="text-sm text-gray-600 mb-6">This action cannot be undone.</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                  onClick={confirmDelete}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
