@@ -15,6 +15,7 @@ export const EditBlogPage: React.FC = () => {
   const saveTimeoutRef = useRef<number | null>(null);
   const restoredRef = useRef(false);
   const [hasLocalDraft, setHasLocalDraft] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [formData, setFormData] = useState<UpdateBlogDto>({
     title: '',
@@ -155,20 +156,17 @@ export const EditBlogPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handler);
   }, [formData]);
 
-  const handleDelete = async () => {
+  const confirmDelete = async () => {
     if (!blog) return;
-    if (!confirm('Are you sure you want to delete this blog?')) return;
-
     const deleteLink = blog.links.find(link => link.rel === 'delete');
     if (!deleteLink) {
       setError('Cannot delete this blog');
+      setShowDeleteModal(false);
       return;
     }
-
     const result = await deleteBlog(deleteLink);
-    if (result) {
-      navigate('/blogs');
-    }
+    if (result) navigate('/blogs');
+    setShowDeleteModal(false);
   };
 
   const handleInputChange = (
@@ -216,7 +214,7 @@ export const EditBlogPage: React.FC = () => {
           ← Back to Blog
         </Link>
         <button
-          onClick={handleDelete}
+          onClick={() => setShowDeleteModal(true)}
           className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
           Delete Blog
@@ -325,6 +323,29 @@ export const EditBlogPage: React.FC = () => {
           </Link>
         </div>
       </form>
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteModal(false)}></div>
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 className="text-xl font-semibold mb-2">Delete this blog?</h2>
+            <p className="text-sm text-gray-600 mb-6">This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

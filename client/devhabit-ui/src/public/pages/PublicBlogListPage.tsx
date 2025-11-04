@@ -659,22 +659,22 @@ const PublicBlogListPage = () => {
                         </div>
                         
                         {/* Text overlay */}
-                        <div className="absolute inset-0 flex flex-col justify-center items-start px-6 py-4 z-10">
-                          <div className="text-white font-bold text-xl mb-2 tracking-wide px-3 py-1.5 bg-black/30 backdrop-blur-sm rounded-md">
+                        <div className="absolute inset-0 flex flex-col justify-center items-start px-2 py-2 z-10">
+                          <div className="text-white font-bold text-xl tracking-wide inline-block px-1.5 py-0.5 rounded bg-black/40 -mt-3">
                             {thumbnailTitle}
                           </div>
                           {thumbnailSummary && (
-                            <div className="text-white font-medium text-xl tracking-wide px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-md">
+                            <div className="text-white font-medium text-xl tracking-wide inline-block px-1.5 py-0.5 rounded bg-white/20 mt-4">
                               {thumbnailSummary}
                             </div>
                           )}
                         </div>
                         
                         {/* Logo in bottom-right corner */}
-                        <div className="absolute bottom-3 right-3 bg-cyan-400 px-3 py-1 rounded z-10">
-                          <div className="flex flex-col items-center leading-tight">
+                        <div className="absolute bottom-3 right-3 bg-cyan-400 px-2 py-0.5 rounded z-10">
+                          <div className="flex flex-col items-center leading-none">
                             <span className="text-white font-bold text-xs">BZ</span>
-                            <span className="text-white font-bold text-xs">Tech</span>
+                            <span className="text-white font-bold text-[9px]">Tech</span>
                           </div>
                         </div>
                       </div>

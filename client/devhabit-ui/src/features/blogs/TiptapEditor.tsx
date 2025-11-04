@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
+import { EditorContent, EditorContext, useEditor, type Editor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -85,11 +85,24 @@ const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
+  editor,
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
+  editor: Editor | null
 }) => {
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!editor) return
+    const rerender = () => setTick((x) => x + 1)
+    editor.on('selectionUpdate', rerender)
+    editor.on('transaction', rerender)
+    return () => {
+      editor.off('selectionUpdate', rerender)
+      editor.off('transaction', rerender)
+    }
+  }, [editor])
   return (
     <>
       <Spacer />
@@ -147,6 +160,61 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <Button
+          type="button"
+          data-style="ghost"
+          aria-label="Image 25% width"
+          tooltip="Image width 25%"
+          disabled={!editor?.isActive('image')}
+          onClick={() => editor?.chain().focus().updateAttributes('image', { width: '25%', height: undefined }).run()}
+        >
+          25%
+        </Button>
+        <Button
+          type="button"
+          data-style="ghost"
+          aria-label="Image 50% width"
+          tooltip="Image width 50%"
+          disabled={!editor?.isActive('image')}
+          onClick={() => editor?.chain().focus().updateAttributes('image', { width: '50%', height: undefined }).run()}
+        >
+          50%
+        </Button>
+        <Button
+          type="button"
+          data-style="ghost"
+          aria-label="Image 75% width"
+          tooltip="Image width 75%"
+          disabled={!editor?.isActive('image')}
+          onClick={() => editor?.chain().focus().updateAttributes('image', { width: '75%', height: undefined }).run()}
+        >
+          75%
+        </Button>
+        <Button
+          type="button"
+          data-style="ghost"
+          aria-label="Image 100% width"
+          tooltip="Image width 100%"
+          disabled={!editor?.isActive('image')}
+          onClick={() => editor?.chain().focus().updateAttributes('image', { width: '100%', height: undefined }).run()}
+        >
+          100%
+        </Button>
+        <Button
+          type="button"
+          data-style="ghost"
+          aria-label="Reset image size"
+          tooltip="Reset image size"
+          disabled={!editor?.isActive('image')}
+          onClick={() => editor?.chain().focus().updateAttributes('image', { width: undefined, height: undefined }).run()}
+        >
+          Reset
+        </Button>
       </ToolbarGroup>
 
       <Spacer />
@@ -269,6 +337,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
                 onHighlighterClick={() => setMobileView("highlighter")}
                 onLinkClick={() => setMobileView("link")}
                 isMobile={isMobile}
+                editor={editor}
               />
             ) : (
               <MobileToolbarContent

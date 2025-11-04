@@ -370,17 +370,69 @@ export const handleImageUpload = async (
     )
   }
 
-  // For demo/testing: Simulate upload progress. In production, replace the following code
-  // with your own upload implementation.
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
+  // Read access token from localStorage (kept in sync by AuthContext)
+  let accessToken: string | null = null
+  try {
+    const raw = localStorage.getItem('auth_tokens')
+    if (raw) {
+      const parsed = JSON.parse(raw) as { accessToken?: string }
+      accessToken = parsed?.accessToken ?? null
     }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
+  } catch {}
+  if (!accessToken) {
+    throw new Error('Not authenticated')
   }
 
-  return "/images/tiptap-ui-placeholder-image.jpg"
+  // Build form data
+  const formData = new FormData()
+  formData.append('file', file)
+
+  // Use XHR to support progress events reliably
+  const base = (await import('../api/config')).API_BASE_URL
+  const url = `${base}/uploads/images`
+
+  const uploadedUrl: string = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', url)
+    xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
+    // Do NOT set Content-Type when sending FormData
+    xhr.responseType = 'json'
+
+    xhr.upload.onprogress = (evt) => {
+      if (evt.lengthComputable) {
+        const progress = Math.round((evt.loaded / evt.total) * 100)
+        onProgress?.({ progress })
+      }
+    }
+
+    xhr.onerror = () => reject(new Error('Upload failed'))
+    xhr.onabort = () => reject(new Error('Upload cancelled'))
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = xhr.response as { url?: string }
+        if (!data?.url) {
+          reject(new Error('Upload failed: no URL returned'))
+        } else {
+          onProgress?.({ progress: 100 })
+          resolve(data.url)
+        }
+      } else if (xhr.status === 401) {
+        reject(new Error('Not authenticated'))
+      } else {
+        reject(new Error(`Upload failed (${xhr.status})`))
+      }
+    }
+
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', () => {
+        try { xhr.abort() } catch {}
+      })
+    }
+
+    xhr.send(formData)
+  })
+
+  return uploadedUrl
 }
 
 type ProtocolOptions = {
