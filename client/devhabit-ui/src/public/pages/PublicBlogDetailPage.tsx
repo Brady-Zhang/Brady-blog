@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { TiptapEditor } from '../../features/blogs/TiptapEditor';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';
@@ -7,12 +7,22 @@ import type { Blog } from '../../features/blogs/types';
 const PublicBlogDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const searchQuery = searchParams.get('search') || '';
-  const backUrl = searchQuery ? `/public/blog?search=${encodeURIComponent(searchQuery)}` : '/public/blog';
+  const pageParam = searchParams.get('page') || '';
+  const pageSizeParam = searchParams.get('pageSize') || '';
+  const backParams = [
+    searchQuery ? `search=${encodeURIComponent(searchQuery)}` : '',
+    pageParam ? `page=${encodeURIComponent(pageParam)}` : '',
+    pageSizeParam ? `pageSize=${encodeURIComponent(pageSizeParam)}` : '',
+  ].filter(Boolean).join('&');
+  const backUrlBase = backParams ? `/public/blog?${backParams}&restore=1` : '/public/blog?restore=1';
+  const backHash = id ? `#blog-${id}` : '';
+  const backUrl = `${backUrlBase}${backHash}`;
 
   useEffect(() => {
     loadPublicBlog();
@@ -61,9 +71,21 @@ const PublicBlogDetailPage = () => {
     return (
       <div className="max-w-5xl mx-auto p-6 text-center">
         <p className="text-red-600 mb-4">{error}</p>
-        <Link to={backUrl} className="text-blue-600 hover:text-blue-800">
+        <button
+          type="button"
+          className="text-blue-600 hover:text-blue-800"
+          onClick={(e) => {
+            e.preventDefault();
+            try {
+              if (id) {
+                sessionStorage.setItem('restoreTargetId', String(id));
+              }
+            } catch {}
+            navigate(backUrl);
+          }}
+        >
           ← Back to Blog List
-        </Link>
+        </button>
       </div>
     );
   }
@@ -86,13 +108,22 @@ const PublicBlogDetailPage = () => {
   return (
     <div className="py-12 px-6">
       <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-          <Link
-            to={backUrl}
+        <div className="mb-8">
+          <button
+            type="button"
             className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                if (id) {
+                  sessionStorage.setItem('restoreTargetId', String(id));
+                }
+              } catch {}
+              navigate(backUrl);
+            }}
           >
             ← Back to Blog List
-          </Link>
+          </button>
         </div>
 
         <article>
