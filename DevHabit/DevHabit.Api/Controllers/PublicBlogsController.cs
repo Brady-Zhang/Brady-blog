@@ -5,8 +5,11 @@ using DevHabit.Api.DTOs.Blogs;
 using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using DevHabit.Api.Settings;
 
 namespace DevHabit.Api.Controllers;
 
@@ -22,7 +25,8 @@ namespace DevHabit.Api.Controllers;
     "application/vnd.dev-habit.json+json",
     "application/vnd.dev-habit.hateoas+json")]
 public sealed class PublicBlogsController(
-    ApplicationDbContext dbContext) : ControllerBase
+    ApplicationDbContext dbContext,
+    ApplicationIdentityDbContext identityDbContext) : ControllerBase
 {
     private static readonly char[] WordSeparators = { ' ' };
     /// <summary>
@@ -37,10 +41,44 @@ public sealed class PublicBlogsController(
     {
         search = search?.Trim().ToLower();
 
-        // Only get published blogs from all users
+        // Get admin user IDs
+        IdentityRole? adminRole = await identityDbContext.Roles
+            .FirstOrDefaultAsync(r => r.Name == Roles.Admin);
+        
+        var adminUserIds = new List<string>();
+        if (adminRole != null)
+        {
+            List<string> identityAdminUserIds = await identityDbContext.UserRoles
+                .Where(ur => ur.RoleId == adminRole.Id)
+                .Select(ur => ur.UserId)
+                .ToListAsync();
+            
+            // Map Identity User IDs to Application User IDs
+            var identityUserIds = identityAdminUserIds.ToHashSet();
+            var applicationUserIds = await dbContext.Users
+                .Where(u => identityUserIds.Contains(u.IdentityId))
+                .Select(u => u.Id)
+                .ToListAsync();
+            
+            adminUserIds = applicationUserIds;
+        }
+
+        // Only get published blogs from admin users
         IQueryable<Blog> blogsQuery = dbContext
             .Blogs
-            .Where(b => b.IsPublished); // Only published blogs
+            .Where(b => b.IsPublished);
+
+        // Filter by admin users if any exist
+        if (adminUserIds.Any())
+        {
+            blogsQuery = blogsQuery.Where(b => adminUserIds.Contains(b.UserId));
+        }
+        else
+        {
+            // If no admin users found, return empty result (don't show any blogs)
+            // This prevents showing member blogs when no admin exists
+            blogsQuery = blogsQuery.Where(b => false);
+        }
 
         // Apply search filter if provided
         if (!string.IsNullOrEmpty(search))
@@ -115,10 +153,43 @@ public sealed class PublicBlogsController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPublicBlog(string id)
     {
+        // Get admin user IDs
+        IdentityRole? adminRole = await identityDbContext.Roles
+            .FirstOrDefaultAsync(r => r.Name == Roles.Admin);
+        
+        var adminUserIds = new List<string>();
+        if (adminRole != null)
+        {
+            List<string> identityAdminUserIds = await identityDbContext.UserRoles
+                .Where(ur => ur.RoleId == adminRole.Id)
+                .Select(ur => ur.UserId)
+                .ToListAsync();
+            
+            // Map Identity User IDs to Application User IDs
+            var identityUserIdsSet = identityAdminUserIds.ToHashSet();
+            adminUserIds = await dbContext.Users
+                .Where(u => identityUserIdsSet.Contains(u.IdentityId))
+                .Select(u => u.Id)
+                .ToListAsync();
+        }
+
         // Only get published blogs
-        BlogWithTagsDto? blog = await dbContext
+        IQueryable<Blog> blogQuery = dbContext
             .Blogs
-            .Where(b => b.Id == id && b.IsPublished)
+            .Where(b => b.Id == id && b.IsPublished);
+
+        // Filter by admin users if any exist
+        if (adminUserIds.Any())
+        {
+            blogQuery = blogQuery.Where(b => adminUserIds.Contains(b.UserId));
+        }
+        else
+        {
+            // If no admin users found, return empty result (don't show any blogs)
+            blogQuery = blogQuery.Where(b => false);
+        }
+
+        BlogWithTagsDto? blog = await blogQuery
             .Select(BlogQueries.ProjectToDtoWithTags())
             .FirstOrDefaultAsync();
 

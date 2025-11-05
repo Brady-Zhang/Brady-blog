@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
 
-[Authorize(Roles = Roles.Member)]
+[Authorize(Roles = Roles.Member + "," + Roles.Admin)]
 [ApiController]
 [Route("blogs")]
 [ApiVersion(1.0)]

@@ -1,6 +1,6 @@
 using System.Net.Mime;
 using Asp.Versioning;
-using DevHabit.Api.DTOs.Common;
+using DevHabit.Api.DTOs.Uploads;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Services;
@@ -24,32 +24,44 @@ public sealed class UploadsController(IBlobStorageService blobStorage, IOptions<
         "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/avif", "image/svg+xml"
     };
 
+    /// <summary>
+    /// Uploads an image file to Azure Blob Storage
+    /// </summary>
+    /// <param name="request">The image upload request containing the file and optional blog ID</param>
+    /// <returns>The uploaded image URL and metadata</returns>
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<UploadImageResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Upload([FromForm] IFormFile file, [FromQuery] string? blogId = null)
+    public async Task<IActionResult> Upload([FromForm] UploadImageRequestDto request)
     {
-        if (file is null || file.Length == 0)
+        if (request.File is null || request.File.Length == 0)
         {
             return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "File is required");
         }
 
-        if (!AllowedContentTypes.Contains(file.ContentType))
+        if (!AllowedContentTypes.Contains(request.File.ContentType))
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: $"Unsupported content type: {file.ContentType}");
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: $"Unsupported content type: {request.File.ContentType}");
         }
 
-        string extension = Path.GetExtension(file.FileName);
+        string extension = Path.GetExtension(request.File.FileName);
         string userId = User.GetIdentityId() ?? "anonymous";
-        string safeBlogId = string.IsNullOrWhiteSpace(blogId) ? "general" : blogId.Trim();
+        string safeBlogId = string.IsNullOrWhiteSpace(request.BlogId) ? "general" : request.BlogId.Trim();
         string blobName = $"users/{userId}/blogs/{safeBlogId}/{DateTime.UtcNow:yyyy/MM/dd}/{Guid.NewGuid():N}{extension}";
 
-        await using Stream s = file.OpenReadStream();
+        await using Stream s = request.File.OpenReadStream();
         string container = storageOptions.Value.ContainerName;
-        string url = await blobStorage.UploadAsync(s, container, blobName, file.ContentType, HttpContext.RequestAborted);
+        string url = await blobStorage.UploadAsync(s, container, blobName, request.File.ContentType, HttpContext.RequestAborted);
 
-        return Ok(new { url, blobName, contentType = file.ContentType, size = file.Length });
+        return Ok(new UploadImageResponseDto
+        {
+            Url = url,
+            BlobName = blobName,
+            ContentType = request.File.ContentType,
+            Size = request.File.Length
+        });
     }
 }
 

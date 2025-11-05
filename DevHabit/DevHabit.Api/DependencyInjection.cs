@@ -233,6 +233,9 @@ public static class DependencyInjection
         builder.Services.Configure<TagsOptions>(
             builder.Configuration.GetSection(TagsOptions.SectionName));
 
+        builder.Services.Configure<PublicBlogOptions>(
+            builder.Configuration.GetSection(PublicBlogOptions.SectionName));
+
         builder.Services.AddSingleton<InMemoryETagStore>();
 
         // Azure Blob Storage
