@@ -2,8 +2,6 @@ import React, { useLayoutEffect, useState } from 'react';
 import { FaGithub, FaLinkedin, FaPhone } from 'react-icons/fa';
 import { MdEmail, MdClose, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 import selfImage from '../../assets/self.jpg';
-import reactSvg from '../../assets/react.svg';
-import self01Image from '../../assets/self01.jpg';
 import museum01 from '../../assets/museum01.png';
 import museum02 from '../../assets/museum02.png';
 import museum03 from '../../assets/museum03.png';
