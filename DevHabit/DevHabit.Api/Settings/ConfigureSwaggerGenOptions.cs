@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -27,10 +28,20 @@ public sealed class ConfigureSwaggerGenOptions(IApiVersionDescriptionProvider ap
 
         string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        options.IncludeXmlComments(xmlPath);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath);
+        }
 
         options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
         options.DescribeAllParametersInCamelCase();
+        
+        // Ignore Identity types that might cause Swagger generation issues
+        options.IgnoreObsoleteActions();
+        options.IgnoreObsoleteProperties();
+        
+        // Configure file upload support
+        options.OperationFilter<FileUploadOperationFilter>();
 
         options.AddSecurityDefinition(
             "Bearer",

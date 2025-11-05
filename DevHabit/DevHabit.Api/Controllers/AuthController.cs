@@ -199,4 +199,118 @@ public sealed class AuthController(
 
         return Ok(accessTokens);
     }
+
+    /// <summary>
+    /// Creates an admin user account (requires admin creation secret)
+    /// </summary>
+    /// <param name="createAdminDto">Admin account details</param>
+    /// <param name="validator">Validator for the admin creation request</param>
+    /// <returns>Access tokens for the newly created admin</returns>
+    [HttpPost("create-admin")]
+    [ProducesResponseType<AccessTokensDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<AccessTokensDto>> CreateAdmin(
+        CreateAdminDto createAdminDto,
+        IValidator<CreateAdminDto> validator)
+    {
+        await validator.ValidateAndThrowAsync(createAdminDto);
+
+        // Check admin creation secret (configured in appsettings)
+        string? adminSecret = _jwtAuthOptions.AdminCreationSecret;
+        if (string.IsNullOrWhiteSpace(adminSecret) || createAdminDto.Secret != adminSecret)
+        {
+            return Problem(
+                detail: "Invalid admin creation secret",
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+
+        using IDbContextTransaction transaction = await identityDbContext.Database.BeginTransactionAsync();
+        applicationDbContext.Database.SetDbConnection(identityDbContext.Database.GetDbConnection());
+        await applicationDbContext.Database.UseTransactionAsync(transaction.GetDbTransaction());
+
+        // Check if user already exists
+        IdentityUser? existingUser = await userManager.FindByEmailAsync(createAdminDto.Email);
+        if (existingUser != null)
+        {
+            // User exists, just add Admin role if not already present
+            IList<string> existingRoles = await userManager.GetRolesAsync(existingUser);
+            if (!existingRoles.Contains(Roles.Admin))
+            {
+                await userManager.AddToRoleAsync(existingUser, Roles.Admin);
+            }
+            // Also ensure Member role
+            if (!existingRoles.Contains(Roles.Member))
+            {
+                await userManager.AddToRoleAsync(existingUser, Roles.Member);
+            }
+
+            await identityDbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            IList<string> allRoles = await userManager.GetRolesAsync(existingUser);
+            var tokenRequest = new TokenRequest(existingUser.Id, existingUser.Email!, allRoles);
+            AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
+
+            return Ok(accessTokens);
+        }
+
+        // Create new admin user
+        var identityUser = new IdentityUser
+        {
+            Email = createAdminDto.Email,
+            UserName = createAdminDto.Email
+        };
+
+        IdentityResult createUserResult = await userManager.CreateAsync(identityUser, createAdminDto.Password);
+
+        if (!createUserResult.Succeeded)
+        {
+            var extensions = new Dictionary<string, object?>
+            {
+                {
+                    "errors",
+                    createUserResult.Errors.ToDictionary(e => e.Code, e => e.Description)
+                }
+            };
+            return Problem(
+                detail: "Unable to create admin user, please try again",
+                statusCode: StatusCodes.Status400BadRequest,
+                extensions: extensions);
+        }
+
+        // Add both Member and Admin roles
+        await userManager.AddToRoleAsync(identityUser, Roles.Member);
+        await userManager.AddToRoleAsync(identityUser, Roles.Admin);
+
+        var user = new User
+        {
+            Id = Entities.User.NewId(),
+            Email = createAdminDto.Email,
+            Name = createAdminDto.Name ?? createAdminDto.Email.Split('@')[0],
+            IdentityId = identityUser.Id,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        applicationDbContext.Users.Add(user);
+        await applicationDbContext.SaveChangesAsync();
+
+        IList<string> roles = await userManager.GetRolesAsync(identityUser);
+        var adminTokenRequest = new TokenRequest(identityUser.Id, identityUser.Email!, roles);
+        AccessTokensDto adminAccessTokens = tokenProvider.Create(adminTokenRequest);
+
+        var refreshToken = new RefreshToken
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = identityUser.Id,
+            Token = adminAccessTokens.RefreshToken,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtAuthOptions.RefreshTokenExpirationDays)
+        };
+        identityDbContext.RefreshTokens.Add(refreshToken);
+
+        await identityDbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return Ok(adminAccessTokens);
+    }
 }
