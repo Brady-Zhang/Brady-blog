@@ -4,6 +4,13 @@ import { MdEmail, MdClose, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 import selfImage from '../../assets/self.jpg';
 import reactSvg from '../../assets/react.svg';
 import self01Image from '../../assets/self01.jpg';
+import museum01 from '../../assets/museum01.png';
+import museum02 from '../../assets/museum02.png';
+import museum03 from '../../assets/museum03.png';
+import museum04 from '../../assets/museum04.png';
+import mpg01 from '../../assets/mpg01.png';
+import mpg02 from '../../assets/mpg02.png';
+import mpg03 from '../../assets/mpg03.png';
 
 interface ContactInfo {
   label: string;
@@ -34,10 +41,19 @@ const AboutMePage: React.FC = () => {
 
   const projects: Project[] = [
     {
-      title: 'Technical Skills Learning Module',
-      technologies: 'Next.js, ASP.NET Core, SQL Server, React Query, Redis, Elasticsearch',
-      description: 'A full-stack module integrated into the company website, designed to help students and candidates enhance their technical skills. It features Markdown-based editing and rendering, along with fast and accurate question search.',
-      images: [reactSvg, selfImage, self01Image],
+      title: 'Museum of Human Disease – Booking System',
+      technologies: 'React (TypeScript), ASP.NET Core Web API, SQL Server (EF Core), Azure App Service & Azure SQL, Azure Blob Storage',
+      description:
+        'A full‑stack web application that lets visitors plan and book their museum visits online, while managers securely manage time slots, capacity, and generate operational reports. It features an end‑to‑end booking flow with validation, role‑based authorization, and responsive UI.',
+      images: [museum01, museum02, museum03, museum04],
+      projectUrl: '#',
+    },
+    {
+      title: 'My Pet Groomer – SaaS Platform',
+      technologies: 'React (TypeScript), ASP.NET Core Web API, SQL Server (EF Core), Azure App Service & Azure SQL, Azure Blob Storage',
+      description:
+        'A multi‑tenant SaaS management platform that helps pet grooming businesses manage multiple stores with appointments, customers, payments, and service scheduling. Supports role‑based access, store configuration, time‑slot capacity, and operational metrics.',
+      images: [mpg01, mpg02, mpg03],
       projectUrl: '#',
     },
   ];
@@ -226,14 +242,7 @@ const AboutMePage: React.FC = () => {
                         <p className="text-gray-700 leading-relaxed mb-6">{project.description}</p>
                       </div>
                       
-                      {/* View Project Button */}
-                      <button
-                        onClick={() => project.projectUrl && window.open(project.projectUrl, '_blank', 'noopener,noreferrer')}
-                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg border border-gray-300 shadow-inner transition-colors cursor-pointer self-start"
-                        style={{ boxShadow: 'inset 0 2px 3px rgba(0, 0, 0, 0.1)' }}
-                      >
-                        View Project
-                      </button>
+                      {/* View Project Button temporarily disabled */}
                     </div>
 
                     {/* Right Side - Images with 3D Carousel */}

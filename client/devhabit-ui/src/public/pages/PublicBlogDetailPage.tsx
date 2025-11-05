@@ -20,7 +20,7 @@ const PublicBlogDetailPage = () => {
     pageParam ? `page=${encodeURIComponent(pageParam)}` : '',
     pageSizeParam ? `pageSize=${encodeURIComponent(pageSizeParam)}` : '',
   ].filter(Boolean).join('&');
-  const backUrlBase = backParams ? `/public/blog?${backParams}&restore=1` : '/public/blog?restore=1';
+  const backUrlBase = backParams ? `/blog?${backParams}&restore=1` : '/blog?restore=1';
   const backHash = id ? `#blog-${id}` : '';
   const backUrl = `${backUrlBase}${backHash}`;
 

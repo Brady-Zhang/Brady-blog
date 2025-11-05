@@ -630,7 +630,7 @@ const PublicBlogListPage = () => {
                 <div key={blog.id} id={`blog-${blog.id}`}>
                   {index > 0 && <div className="border-t border-gray-300 my-8"></div>}
                   <Link
-                    to={`/public/blog/${blog.id}?${[
+                    to={`/blog/${blog.id}?${[
                       activeSearchQuery ? `search=${encodeURIComponent(activeSearchQuery)}` : '',
                       `page=${encodeURIComponent(String(page))}`,
                       `pageSize=${encodeURIComponent(String(pageSize))}`,

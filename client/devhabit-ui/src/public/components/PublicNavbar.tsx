@@ -5,7 +5,7 @@ const PublicNavbar = () => {
     return (
     <nav className="sticky top-0 z-50 px-6 py-4 shadow-sm" style={{ backgroundColor: '#0f172a' }}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/public/blog" className="text-xl font-bold flex items-center gap-3">
+        <Link to="/blog" className="text-xl font-bold flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/20">
             <img 
               src={selfImage} 
@@ -18,13 +18,13 @@ const PublicNavbar = () => {
         
         <div className="flex items-center gap-8">
           <Link 
-            to="/public/about" 
+            to="/about" 
             className="text-white hover:text-gray-300 font-medium transition-colors"
           >
             About Me
           </Link>
           <Link 
-            to="/public/blog" 
+            to="/blog" 
             className="text-white hover:text-gray-300 font-medium transition-colors"
           >
             Blog

@@ -32,11 +32,16 @@ export default function App() {
         <Routes>
           {/* Public routes - 展示端（无需登录） */}
           <Route element={<PublicLayout />}>
-            <Route path="/public/blog" element={<PublicBlogListPage />} />
-            <Route path="/public/blog/:id" element={<PublicBlogDetailPage />} />
-            <Route path="/public/about" element={<AboutMePage />} />
+            <Route path="/blog" element={<PublicBlogListPage />} />
+            <Route path="/blog/:id" element={<PublicBlogDetailPage />} />
+            <Route path="/about" element={<AboutMePage />} />
             {/* 可以继续添加更多公开展示页面 */}
           </Route>
+
+          {/* Default route: root goes to public blog list */}
+          <Route path="/" element={<Navigate to="/blog" replace />} />
+          {/* Fallback to blog for unknown routes */}
+          <Route path="*" element={<Navigate to="/blog" replace />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
@@ -50,7 +55,6 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/habits" element={<HabitsPage />} />
