@@ -5,6 +5,7 @@ import { EditorContent, EditorContext, useEditor, type Editor } from "@tiptap/re
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight"
 import { Image } from "@tiptap/extension-image"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
@@ -13,6 +14,12 @@ import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
+import { common, createLowlight } from 'lowlight'
+import csharp from 'highlight.js/lib/languages/csharp'
+import typescript from 'highlight.js/lib/languages/typescript'
+import javascript from 'highlight.js/lib/languages/javascript'
+import sql from 'highlight.js/lib/languages/sql'
+import 'highlight.js/styles/atom-one-dark.css'
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -252,12 +259,22 @@ const MobileToolbarContent = ({
 )
 
 export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, editable = true, className = '' }) => {
+  const lowlight = useMemo(() => {
+    const ll = createLowlight(common)
+    ll.register('csharp', csharp)
+    ll.register('typescript', typescript)
+    ll.register('javascript', javascript)
+    ll.register('sql', sql)
+    return ll
+  }, [])
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">(
     "main"
   )
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [pickerPos, setPickerPos] = useState<{visible: boolean; top: number; left: number}>({ visible: false, top: 0, left: 0 })
 
   // Safely parse JSON content to avoid runtime crashes on invalid JSON
   const initialEditorContent = useMemo(() => {
@@ -283,10 +300,15 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        codeBlock: false,
         link: {
           openOnClick: false,
           enableClickSelection: true,
         },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: { class: 'hljs' },
       }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -313,13 +335,45 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
     },
   })
 
-  // Only enable cursor-visibility logic in editable mode to avoid iOS mount timing issues
-  const rect = editable
-    ? useCursorVisibility({
-        editor,
-        overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-      })
-    : { width: 0, height: 0, offsetTop: 0, offsetLeft: 0, scale: 0 }
+  const languageOptions = useMemo(
+    () => [
+      { value: 'csharp', label: 'C#' },
+      { value: 'typescript', label: 'TypeScript' },
+      { value: 'javascript', label: 'JavaScript' },
+      { value: 'sql', label: 'SQL' },
+      { value: 'json', label: 'JSON' },
+      { value: 'bash', label: 'Bash' },
+    ],
+    []
+  )
+
+  const rect = useCursorVisibility({
+    editor,
+    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
+  })
+
+  // Position language picker over the active code block
+  useEffect(() => {
+    const updatePicker = () => {
+      if (!editor || !wrapperRef.current) { setPickerPos(p => ({ ...p, visible: false })); return }
+      if (!editor.isActive('codeBlock')) { setPickerPos(p => ({ ...p, visible: false })); return }
+      const sel = document.getSelection();
+      const anchor = sel?.anchorNode as Node | null
+      const element = (anchor instanceof Element ? anchor : anchor?.parentElement) as HTMLElement | null
+      const pre = element ? (element.closest('pre') as HTMLElement | null) : null
+      if (!pre) { setPickerPos(p => ({ ...p, visible: false })); return }
+      const preRect = pre.getBoundingClientRect()
+      const wrapRect = wrapperRef.current.getBoundingClientRect()
+      setPickerPos({ visible: true, top: preRect.top - wrapRect.top + 8, left: preRect.right - wrapRect.left - 160 })
+    }
+
+    document.addEventListener('selectionchange', updatePicker)
+    editor?.on('transaction', updatePicker)
+    return () => {
+      document.removeEventListener('selectionchange', updatePicker)
+      editor?.off('transaction', updatePicker)
+    }
+  }, [editor])
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
@@ -332,7 +386,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
   }
 
   return (
-    <div className={`blog-editor-wrapper ${className}`}>
+    <div ref={wrapperRef} className={`blog-editor-wrapper ${className}`} style={{ position: 'relative' }}>
       <EditorContext.Provider value={{ editor }}>
         {editable && (
           <Toolbar
@@ -358,6 +412,35 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
                 onBack={() => setMobileView("main")}
               />
             )}
+
+            <div style={{ marginLeft: 8 }}>
+              <select
+                aria-label="Code language"
+                disabled={!editor?.isActive('codeBlock')}
+                value={(editor?.getAttributes('codeBlock')?.language as string) || ''}
+                onChange={(e) =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes('codeBlock', { language: e.target.value })
+                    .run()
+                }
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid #e5e7eb',
+                  background: '#fff',
+                  opacity: editor?.isActive('codeBlock') ? 1 : 0.5,
+                }}
+              >
+                <option value="">Plain Text</option>
+                {languageOptions.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </Toolbar>
         )}
 
@@ -366,6 +449,22 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
           role="presentation"
           className="blog-editor-content"
         />
+
+        {pickerPos.visible && (
+          <div style={{ position: 'absolute', top: pickerPos.top, left: pickerPos.left, zIndex: 20 }}>
+            <select
+              aria-label="Code language"
+              value={(editor.getAttributes('codeBlock')?.language as string) || ''}
+              onChange={(e) => editor.chain().focus().updateAttributes('codeBlock', { language: e.target.value }).run()}
+              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}
+            >
+              <option value="">Plain Text</option>
+              {languageOptions.map((l) => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </EditorContext.Provider>
     </div>
   )

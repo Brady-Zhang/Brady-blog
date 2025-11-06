@@ -29,6 +29,7 @@ public static class BlogMappings
             ThumbnailTitle = dto.ThumbnailTitle,
             ThumbnailSummary = dto.ThumbnailSummary,
             Content = dto.Content,
+            ContentHtml = dto.ContentHtml,
             IsPublished = dto.IsPublished,
             PublishedAtUtc = dto.IsPublished ? DateTime.UtcNow : null,
             CreatedAtUtc = DateTime.UtcNow,
@@ -47,6 +48,7 @@ public static class BlogMappings
             ThumbnailTitle = blog.ThumbnailTitle,
             ThumbnailSummary = blog.ThumbnailSummary,
             Content = blog.Content,
+            ContentHtml = blog.ContentHtml,
             IsPublished = blog.IsPublished,
             IsArchived = blog.IsArchived,
             PublishedAtUtc = blog.PublishedAtUtc,
@@ -62,6 +64,7 @@ public static class BlogMappings
         blog.ThumbnailTitle = dto.ThumbnailTitle;
         blog.ThumbnailSummary = dto.ThumbnailSummary;
         blog.Content = dto.Content;
+        blog.ContentHtml = dto.ContentHtml ?? blog.ContentHtml;
         
         // If blog is being published for the first time
         if (dto.IsPublished && !blog.IsPublished)

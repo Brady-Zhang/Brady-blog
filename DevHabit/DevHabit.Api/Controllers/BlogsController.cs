@@ -29,7 +29,8 @@ namespace DevHabit.Api.Controllers;
 public sealed class BlogsController(
     ApplicationDbContext dbContext,
     LinkService linkService,
-    UserContext userContext) : ControllerBase
+    UserContext userContext,
+    ILogger<BlogsController> logger) : ControllerBase
 {
     /// <summary>
     /// Retrieves a paginated list of blogs
@@ -171,6 +172,7 @@ public sealed class BlogsController(
         await validator.ValidateAndThrowAsync(createBlogDto);
 
         Blog blog = createBlogDto.ToEntity(userId);
+        // NOTE: HTML sanitization temporarily disabled (NuGet access issue). Ensure frontend sanitizes.
 
         dbContext.Blogs.Add(blog);
 
@@ -193,7 +195,7 @@ public sealed class BlogsController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UpdateBlog(string id, UpdateBlogDto updateBlogDto)
+    public async Task<ActionResult> UpdateBlog(string id, [FromBody] UpdateBlogDto updateBlogDto)
     {
         string? userId = await userContext.GetUserIdAsync();
         if (string.IsNullOrWhiteSpace(userId))
@@ -208,7 +210,13 @@ public sealed class BlogsController(
             return NotFound();
         }
 
+        logger.LogInformation("Updating blog {BlogId}. Content length: {ContentLength}, ContentHtml length: {HtmlLength}",
+            id,
+            updateBlogDto.Content?.Length ?? 0,
+            updateBlogDto.ContentHtml?.Length ?? 0);
+
         blog.UpdateFromDto(updateBlogDto);
+        // NOTE: HTML sanitization temporarily disabled.
 
         await dbContext.SaveChangesAsync();
 

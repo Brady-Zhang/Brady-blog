@@ -6,6 +6,7 @@ export interface CreateBlogDto {
   thumbnailTitle?: string;
   thumbnailSummary?: string;
   content: string; // Tiptap JSON content as string
+  contentHtml?: string; // optional pre-rendered HTML
   isPublished: boolean;
 }
 
@@ -15,6 +16,7 @@ export interface UpdateBlogDto {
   thumbnailTitle?: string;
   thumbnailSummary?: string;
   content: string; // Tiptap JSON content as string
+  contentHtml?: string;
   isPublished: boolean;
 }
 
@@ -25,6 +27,7 @@ export interface Blog extends HateoasResponse {
   thumbnailTitle?: string;
   thumbnailSummary?: string;
   content: string;
+  contentHtml?: string;
   isPublished: boolean;
   isArchived: boolean;
   publishedAtUtc?: string;
