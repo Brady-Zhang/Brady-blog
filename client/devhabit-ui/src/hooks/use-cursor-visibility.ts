@@ -36,15 +36,22 @@ export function useCursorVisibility({
   useEffect(() => {
     const ensureCursorVisibility = () => {
       if (!editor) return
-
-      const { state, view } = editor
-      // Guard for iOS: view may not be available or mounted yet
-      if (!view || typeof (view as any).hasFocus !== 'function') return
+      // Access editor.view defensively because Tiptap throws if accessed before mount
+      let view: any
+      let state: any
+      try {
+        view = (editor as any).view
+        state = (editor as any).state
+      } catch {
+        return
+      }
+      if (!view || typeof view.hasFocus !== 'function') return
       if (!view.hasFocus()) return
 
       // Get current cursor position coordinates
-      const { from } = state.selection
-      const coordsAtPos = (view as any).coordsAtPos
+      const { from } = state?.selection ?? {}
+      if (typeof from !== 'number') return
+      const coordsAtPos = view.coordsAtPos
       if (typeof coordsAtPos !== 'function') return
       const cursorCoords = coordsAtPos.call(view, from)
 
