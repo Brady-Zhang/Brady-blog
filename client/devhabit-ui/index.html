@@ -12,6 +12,16 @@
         sessionStorage.setItem('bypassCache', '1');
       }
     </script>
+    <script>
+      window.addEventListener('error', (e) => {
+        try { alert('JS Error: ' + (e.error?.message || e.message)); } catch {}
+        console.log('[JS Error]', e.error || e.message, e);
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        try { alert('Promise Rejection: ' + (e.reason?.message || e.reason)); } catch {}
+        console.log('[Promise Rejection]', e.reason || e);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
