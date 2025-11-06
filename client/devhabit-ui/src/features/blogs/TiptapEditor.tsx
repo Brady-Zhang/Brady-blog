@@ -394,7 +394,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
             style={{
               ...(isMobile
                 ? {
-                    bottom: `calc(100% - ${height - rect.y}px)`,
+                    bottom: `calc(100% - ${height - ((rect as any)?.y ?? 0)}px)`,
                   }
                 : {}),
             }}
