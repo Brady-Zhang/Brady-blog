@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { EditorContent, EditorContext, useEditor, type Editor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
@@ -259,6 +259,16 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
   )
   const toolbarRef = useRef<HTMLDivElement>(null)
 
+  // Safely parse JSON content to avoid runtime crashes on invalid JSON
+  const initialEditorContent = useMemo(() => {
+    if (!content) return ""
+    try {
+      return JSON.parse(content)
+    } catch {
+      return ""
+    }
+  }, [content])
+
   const editor = useEditor({
     shouldRerenderOnTransaction: false,
     editorProps: {
@@ -296,7 +306,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],
-    content: content ? JSON.parse(content) : '',
+    content: initialEditorContent,
     editable,
     onUpdate: ({ editor }) => {
       onChange(JSON.stringify(editor.getJSON()));
