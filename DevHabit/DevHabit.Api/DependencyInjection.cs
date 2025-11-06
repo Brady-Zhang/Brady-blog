@@ -1,8 +1,8 @@
 ﻿using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Blogs;
 using DevHabit.Api.DTOs.Entries;
@@ -14,7 +14,6 @@ using DevHabit.Api.Middleware;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using DevHabit.Api.Settings;
-using Azure.Storage.Blobs;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -134,14 +133,22 @@ public static class DependencyInjection
             .WithMetrics(metrics => metrics
                 .AddHttpClientInstrumentation()
                 .AddAspNetCoreInstrumentation()
-                .AddRuntimeInstrumentation())
-            .UseOtlpExporter();
+                .AddRuntimeInstrumentation());
 
         builder.Logging.AddOpenTelemetry(options =>
         {
             options.IncludeScopes = true;
             options.IncludeFormattedMessage = true;
         });
+
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+        }
+        else
+        {
+            builder.Services.AddOpenTelemetry().UseAzureMonitor();
+        }
 
         return builder;
     }
