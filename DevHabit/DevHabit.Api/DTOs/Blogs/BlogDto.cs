@@ -10,6 +10,7 @@ public sealed class BlogDto : ILinksResponse
     public string? ThumbnailTitle { get; set; }
     public string? ThumbnailSummary { get; set; }
     public string Content { get; set; } = string.Empty;
+    public string? ContentHtml { get; set; }
     public bool IsPublished { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? PublishedAtUtc { get; set; }

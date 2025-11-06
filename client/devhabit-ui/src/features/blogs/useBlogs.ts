@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../api/config';
 import { fetchWithAuth } from '../../utils/fetchUtils';
 import type { Blog, CreateBlogDto, UpdateBlogDto } from './types';
+import { generateBlogHtmlFromJsonString } from './generateHtml';
 import type { Link, PaginationResult } from '../../types/api';
 
 interface ListBlogsParams {
@@ -107,12 +108,17 @@ export const useBlogs = () => {
     setError(null);
 
     try {
+      const ensuredPayload: UpdateBlogDto = {
+        ...blog,
+        contentHtml: blog.contentHtml ?? generateBlogHtmlFromJsonString(blog.content),
+      };
+      console.log('[useBlogs.updateBlog] payload contentHtml length:', (ensuredPayload.contentHtml || '').length);
       await fetchWithAuth<void>(link.href, accessToken, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(blog),
+        body: JSON.stringify(ensuredPayload),
       });
       return true;
     } catch (err: any) {

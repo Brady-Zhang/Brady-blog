@@ -290,6 +290,7 @@ public sealed class PublicBlogsController(
               ThumbnailTitle = blog.ThumbnailTitle,
               ThumbnailSummary = blog.ThumbnailSummary,
               Content = blog.Content,
+              ContentHtml = blog.ContentHtml,
               IsPublished = blog.IsPublished,
               IsArchived = blog.IsArchived,
               PublishedAtUtc = blog.PublishedAtUtc,

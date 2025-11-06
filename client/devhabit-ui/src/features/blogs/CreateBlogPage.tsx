@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useBlogs } from './useBlogs';
 import { TiptapEditor } from './TiptapEditor';
 import type { CreateBlogDto } from './types';
+import { generateBlogHtmlFromJsonString } from './generateHtml';
 
 export const CreateBlogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -81,7 +82,9 @@ export const CreateBlogPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await createBlog(formData);
+      const html = generateBlogHtmlFromJsonString(formData.content);
+      const payload: CreateBlogDto = { ...formData, contentHtml: html };
+      const result = await createBlog(payload);
       if (result) {
         // clear local draft on success
         try { localStorage.removeItem(DRAFT_KEY); } catch {}

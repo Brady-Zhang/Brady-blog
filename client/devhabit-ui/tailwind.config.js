@@ -2,7 +2,25 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            a: {
+              color: '#2563eb',
+              textDecoration: 'underline',
+              '&:hover': { color: '#1d4ed8' },
+            },
+            img: {
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            },
+          },
+        },
+      },
+    },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };

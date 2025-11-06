@@ -9,6 +9,7 @@ public sealed class Blog
     public string? ThumbnailTitle { get; set; }
     public string? ThumbnailSummary { get; set; }
     public string Content { get; set; } = string.Empty; // Tiptap JSON content
+    public string? ContentHtml { get; set; } // Server-generated, sanitized HTML cache
     public bool IsPublished { get; set; }
     public bool IsArchived { get; set; }
     public DateTime? PublishedAtUtc { get; set; }

@@ -122,4 +122,4 @@ API settings live in `DevHabit.Api/appsettings.json` and environment-specific fi
 
 ### License
 
-MIT (or your preferred license)
+MIT

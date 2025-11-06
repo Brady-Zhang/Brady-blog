@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { TiptapEditor } from '../../features/blogs/TiptapEditor';
+import BlogViewer from '../../features/blogs/BlogViewer';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog } from '../../features/blogs/types';
 
@@ -107,7 +108,7 @@ const PublicBlogDetailPage = () => {
 
   return (
     <div className="py-12 px-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         <div className="mb-8">
           <button
             type="button"
@@ -142,9 +143,15 @@ const PublicBlogDetailPage = () => {
             )}
           </header>
 
-          <div className="prose prose-lg max-w-none">
-            <TiptapEditor content={blog.content} onChange={() => {}} editable={false} className="public-display" />
-          </div>
+          {blog.contentHtml ? (
+            <div className="prose prose-lg max-w-none w-full">
+              <BlogViewer html={blog.contentHtml} />
+            </div>
+          ) : (
+            <div className="prose prose-lg max-w-none w-full">
+              <TiptapEditor content={blog.content} onChange={() => {}} editable={false} className="public-display" />
+            </div>
+          )}
         </article>
       </div>
     </div>

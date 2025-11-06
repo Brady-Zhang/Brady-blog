@@ -4,6 +4,7 @@ import { useBlogs } from './useBlogs';
 import { TiptapEditor } from './TiptapEditor';
 import { API_BASE_URL } from '../../api/config';
 import type { Blog, UpdateBlogDto } from './types';
+import { generateBlogHtmlFromJsonString } from './generateHtml';
 import type { Link as HypermediaLink } from '../../types/api';
 
 export const EditBlogPage: React.FC = () => {
@@ -23,6 +24,7 @@ export const EditBlogPage: React.FC = () => {
     thumbnailTitle: '',
     thumbnailSummary: '',
     content: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
+    contentHtml: '',
     isPublished: false,
   });
 
@@ -78,6 +80,7 @@ export const EditBlogPage: React.FC = () => {
         thumbnailTitle: blog.thumbnailTitle || '',
         thumbnailSummary: blog.thumbnailSummary || '',
         content: blog.content,
+        contentHtml: blog.contentHtml || '',
         isPublished: blog.isPublished,
       });
     }
@@ -102,6 +105,7 @@ export const EditBlogPage: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('[EditBlogPage] handleSubmit called');
     e.preventDefault();
     if (!blog) return;
 
@@ -111,7 +115,13 @@ export const EditBlogPage: React.FC = () => {
       return;
     }
 
-    const result = await updateBlog(updateLink, formData);
+    console.log('[EditBlogPage] generating HTML from content, length:', formData.content?.length || 0);
+    const html = generateBlogHtmlFromJsonString(formData.content);
+    const payload: UpdateBlogDto = { ...formData, contentHtml: html || formData.contentHtml || '' };
+    // debug: ensure contentHtml is present in payload
+    console.log('submit payload.contentHtml length:', (payload.contentHtml || '').length, payload);
+    console.log('[EditBlogPage] calling updateBlog with payload keys:', Object.keys(payload));
+    const result = await updateBlog(updateLink, payload);
     if (result) {
       // clear draft on success
       if (draftKey) {
@@ -180,7 +190,11 @@ export const EditBlogPage: React.FC = () => {
   };
 
   const handleContentChange = (content: string) => {
-    setFormData(prev => ({ ...prev, content }));
+    console.log('[EditBlogPage] handleContentChange called, content length:', content?.length || 0);
+    const html = generateBlogHtmlFromJsonString(content);
+    setFormData(prev => ({ ...prev, content, contentHtml: html || '' }));
+    // debug: log generated html length on change
+    console.log('onChange html length:', (html || '').length);
   };
 
   if (error || apiError) {

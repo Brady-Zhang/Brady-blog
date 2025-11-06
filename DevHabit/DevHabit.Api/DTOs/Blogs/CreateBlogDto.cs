@@ -9,6 +9,7 @@ public sealed class CreateBlogDto
     public string? ThumbnailTitle { get; set; }
     public string? ThumbnailSummary { get; set; }
     public string Content { get; set; } = string.Empty;
+    public string? ContentHtml { get; set; }
     
     [JsonRequired]
     public bool IsPublished { get; set; }
