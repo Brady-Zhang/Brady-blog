@@ -75,7 +75,7 @@ jobs:
         run: dotnet tool install --global dotnet-ef
 
       - name: Create migration bundle
-        run: 
+        run: |
           dotnet ef migrations bundle --startup-project ${{ env.API_PROJECT_PATH }} --project ${{ env.API_PROJECT_PATH }} --context ApplicationDbContext --output app-bundle.exe
           dotnet ef migrations bundle --startup-project ${{ env.API_PROJECT_PATH }} --project ${{ env.API_PROJECT_PATH }} --context ApplicationIdentityDbContext --output identity-bundle.exe
 
