@@ -313,10 +313,13 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, e
     },
   })
 
-  const rect = useCursorVisibility({
-    editor,
-    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-  })
+  // Only enable cursor-visibility logic in editable mode to avoid iOS mount timing issues
+  const rect = editable
+    ? useCursorVisibility({
+        editor,
+        overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
+      })
+    : { width: 0, height: 0, offsetTop: 0, offsetLeft: 0, scale: 0 }
 
   useEffect(() => {
     if (!isMobile && mobileView !== "main") {
