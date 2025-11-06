@@ -38,11 +38,15 @@ export function useCursorVisibility({
       if (!editor) return
 
       const { state, view } = editor
+      // Guard for iOS: view may not be available or mounted yet
+      if (!view || typeof (view as any).hasFocus !== 'function') return
       if (!view.hasFocus()) return
 
       // Get current cursor position coordinates
       const { from } = state.selection
-      const cursorCoords = view.coordsAtPos(from)
+      const coordsAtPos = (view as any).coordsAtPos
+      if (typeof coordsAtPos !== 'function') return
+      const cursorCoords = coordsAtPos.call(view, from)
 
       if (windowHeight < rect.height && cursorCoords) {
         const availableSpace = windowHeight - cursorCoords.top
